@@ -93,6 +93,7 @@ So ziehst du auch auf einen neuen PC oder einen anderen Browser um: Datei kopier
 - **Archiv** für fertige Projekte und erledigte Aufgaben, **Papierkorb** mit Wiederherstellen (leert sich nach 7 Tagen)
 - **Akzentfarbe** wählbar: Gras-Grün, Diamant-Türkis, Redstone-Rot, Gold
 - **Hilfe** direkt in der App über den Knopf „Hilfe“
+- **„← Alle Apps“** oben in der Seitenleiste führt zum App-Hub (https://hezudemnrik-eng.github.io/Uebersicht/) mit all deinen Web-Apps
 
 ## Gut zu wissen
 
