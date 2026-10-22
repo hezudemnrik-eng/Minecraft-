@@ -47,6 +47,15 @@ Steht dann in einer Materialliste „10 Steinziegeltreppe“, rechnet Blueprint 
 - Gerechnet wird in ganzen Herstellungen (10 Treppen → 3× herstellen = 12, 2 übrig). Gleiche Zwischenprodukte werden vorher zusammengezählt.
 - Alles ohne Rezept zählt als Grundmaterial. Pro Ergebnis gibt es ein Rezept.
 
+## Stück oder Stacks
+
+Unten in der Seitenleiste (und bei den Materialien) schaltest du **„Mengen: Stück | Stacks“** um. Die Einstellung gilt überall und bleibt gespeichert.
+
+- Im Stack-Modus steht z. B. **„20 Stacks + 20“** statt 1.300, „1 Stack“ statt 64. Unter einem Stack bleibt die Zahl, z. B. „20“. Beim Darüberfahren siehst du die Stückzahl.
+- Eingegeben wird dann mit zwei Feldern: **Stacks + Rest**. Gespeichert wird immer die Stückzahl, du kannst also jederzeit umschalten.
+- Die **Stapelgröße** erkennt Blueprint am Namen: normal 64, **16** z. B. für Eimer, Schilder, Banner, Eier, Schneebälle, Enderperlen, Rüstungsständer („2 Stacks à 16 + 8“), **1** für Werkzeuge, Rüstung, Betten, Boote, Loren, Tränke, gefüllte Eimer, Shulker-Kisten usw.
+- Die Kennzahl in der Übersicht zeigt dann „N Stacks fehlen“, also wie viele Inventarplätze noch fehlen.
+
 ## Daten übertragen (z. B. Handy → Laptop)
 
 Ohne Dateien, per Code zum Kopieren und Einfügen:
@@ -77,6 +86,8 @@ So ziehst du auch auf einen neuen PC oder einen anderen Browser um: Datei kopier
 - **Material** pro Aufgabe und pro Projekt. Die Projekt-Summe fasst gleiche Namen zusammen, Fortschrittsbalken zeigen, was noch fehlt.
 - **Übersicht** für den PC: Kennzahlen, alle Projekte als Tabelle mit Aufgaben-Stand und ihren **Materialien (gesammelt / benötigt)**, dazu „In Arbeit“ und fehlendes Material über alle Projekte
 - **Filter** nach Priorität, Dimension und Zuständigem
+- **Projektansicht** mit immer sichtbarem Material-Bereich (Projekt-Material + Gesamtbedarf), Beschreibung einklappbar
+- **Mengen in Stück oder Stacks** per Umschalter, auch bei der Eingabe
 - **Rezepte** mit Rechner: Materiallisten werden über alle Stufen in Grundmaterialien umgerechnet
 - **Daten übertragen** zwischen Geräten per Code (Kopieren/Teilen → Einfügen), wahlweise zusammenführen oder ersetzen
 - **Archiv** für fertige Projekte und erledigte Aufgaben, **Papierkorb** mit Wiederherstellen (leert sich nach 7 Tagen)

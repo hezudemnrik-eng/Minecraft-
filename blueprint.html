@@ -277,7 +277,14 @@ h2.section { font-family: var(--font-px); font-weight: 400; font-size: 16px; mar
 .mat-row { position: relative; padding-bottom: 5px; }
 .mat-row-track { position: absolute; left: 0; right: 36px; bottom: 0; height: 3px; background: #0c0e11; border-radius: 2px; overflow: hidden; }
 .mat-row-fill { height: 100%; background: var(--accent); }
-.mat-row.complete .input.have { color: var(--accent-strong); }
+.mat-row.complete .input.have, .mat-row.complete .have .input { color: var(--accent-strong); }
+.mat-row.stacked { grid-template-columns: minmax(0, 1fr) 30px; padding-bottom: 8px; }
+.mat-row.stacked .qty-fields { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.mat-row.stacked .mat-row-track { right: 0; }
+.qty-field { display: flex; align-items: center; gap: 8px; flex: 1 1 210px; min-width: 0; }
+.qty-field > span { font-size: 11px; color: var(--text-3); width: 62px; flex: none; }
+.qty-pair { display: grid; grid-template-columns: minmax(44px, 64px) auto minmax(40px, 56px); align-items: center; gap: 6px; min-width: 0; }
+.qty-sep { font-size: 11px; color: var(--text-3); white-space: nowrap; }
 .tags-editor { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .tags-editor .tag-input { width: 150px; flex: 1; min-width: 120px; }
 .links-editor { display: flex; flex-direction: column; gap: 6px; }
@@ -304,6 +311,10 @@ h2.section { font-family: var(--font-px); font-weight: 400; font-size: 16px; mar
 .details-toggle .chev { transition: transform .15s; }
 .details-toggle[aria-expanded="true"] .chev { transform: rotate(90deg); }
 .details-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 24px; padding: 4px 16px 18px; }
+.details-body.single { grid-template-columns: minmax(0, 1fr); max-width: 900px; }
+.proj-materials { margin-top: 16px; }
+.proj-mat-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 24px; }
+.side-qty { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px 2px; font-size: 12px; color: var(--text-3); }
 .panel-title { font-size: 12px; color: var(--text-3); margin: 0 0 8px; text-transform: uppercase; letter-spacing: .06em; }
 .archived-note { margin-bottom: 14px; }
 
@@ -326,7 +337,7 @@ table.mat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .kpi-sub { font-size: 12px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dash-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; align-items: start; }
 .dash-side { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
-.head-tools { display: flex; align-items: center; gap: 8px; }
+.head-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .table-scroll { overflow-x: auto; }
 .proj-table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 13.5px; }
 .proj-table th { text-align: left; font-weight: 500; font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; padding: 6px 8px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
@@ -382,15 +393,19 @@ table.mat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .base-block .mat-table { table-layout: fixed; font-size: 12.5px; }
 .base-block .mat-table th, .base-block .mat-table td { padding: 5px 6px; }
 .base-block .mat-table th { white-space: normal; letter-spacing: .02em; }
-.base-block .mat-table th:not(:first-child), .base-block .mat-table td:not(:first-child) { width: 64px; }
+.base-block .mat-table th:not(:first-child), .base-block .mat-table td:not(:first-child) { width: 30%; }
+.base-block .mat-table .num { white-space: normal; }
 .base-block .mat-table td:first-child { overflow-wrap: anywhere; }
 .card .mat-head, .card .mat-row { grid-template-columns: minmax(0, 1fr) 62px 62px 26px; }
 .card .mat-row-track { right: 32px; }
+.card .mat-row.stacked { grid-template-columns: minmax(0, 1fr) 26px; }
+.card .mat-row.stacked .mat-row-track { right: 0; }
 .steps-box summary { cursor: pointer; color: var(--text-2); font-size: 13px; }
 .craft-steps { margin: 6px 0 0; padding-left: 22px; color: var(--text-2); font-size: 13px; }
 .craft-steps li { margin: 3px 0; }
 .warn-note { color: #ffbf55; font-size: 12px; display: flex; align-items: center; gap: 4px; }
-.calc-row { display: grid; grid-template-columns: minmax(0, 1fr) 110px; gap: 8px; }
+.calc-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.calc-row > input[type="number"] { width: 110px; }
 .calc-empty { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .ing-row { display: grid; grid-template-columns: minmax(0, 1fr) 90px 30px; gap: 6px; align-items: center; }
 .recipe-out { grid-template-columns: minmax(0, 1fr) 170px; }
@@ -442,6 +457,7 @@ dialog.narrow { width: min(460px, calc(100vw - 32px)); }
   .dash-grid { grid-template-columns: 1fr; }
   .kpi-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .details-body { grid-template-columns: 1fr; }
+  .proj-mat-body { grid-template-columns: 1fr; }
 }
 @media (max-width: 860px) {
   #app { grid-template-columns: 1fr; }
@@ -987,6 +1003,52 @@ function baseRows(rows, index = recipeIndex()) {
 }
 const usesRecipes = (rows, index = recipeIndex()) => rows.some(r => index.has(nameKey(r.name)));
 
+/* ===== Mengen: Stück oder Stacks ===== */
+// Stapelgröße am Namen erkennen (Minecraft 1.21, deutsche und einige englische Namen); alles andere stapelt bis 64
+const STACK1_EXACT = new Set(['schild', 'shield', 'kuchen', 'cake', 'elytra', 'sattel', 'saddle', 'fernrohr', 'spyglass', 'bündel', 'bundle']);
+const STACK16_EXACT = new Set(['eimer', 'bucket', 'ei', 'eier', 'egg', 'eggs']);
+const STACK16_RE = /(holzschild|hängeschild|banner$|braunes ei|blaues ei|schneeball|enderperle|honigflasche|rüstungsständer|beschriebenes buch|\bsign$|\bbanner$|snowball|ender pearl|honey bottle|armor stand|written book)/;
+const STACK1_RE = /(spitzhacke|axt$|schaufel|hacke$|schwert|bogen$|armbrust|dreizack|streitkolben|angel$|schere$|feuerzeug|pinsel|helm$|kappe$|panzer$|jacke$|hose$|beinschutz|stiefel|rüstung$|.eimer$|bett$|boot( mit truhe)?$|floß( mit truhe)?$|lore$|trank|suppe$|eintopf|ragout|schallplatte|totem|shulker-?kiste|buch und feder|verzaubertes buch|bündel$|pickaxe|sword|shovel|\bhoe$|\baxe$|helmet|chestplate|leggings|boots$|\bbed$|\bboat$|minecart|potion|stew$|soup$|music disc|shulker box|enchanted book|book and quill|. bucket$)/;
+function stackSize(name) {
+  const k = nameKey(name);
+  if (!k) return 64;
+  if (STACK1_EXACT.has(k)) return 1;
+  if (STACK16_EXACT.has(k) || STACK16_RE.test(k)) return 16;
+  if (STACK1_RE.test(k)) return 1;
+  return 64;
+}
+const stacksMode = () => ui.prefs.qtyUnit === 'stacks';
+function fmtStacks(n, size) {
+  n = Math.max(0, Math.round(Number(n) || 0));
+  if (size <= 1) return fmtNum(n);
+  const st = Math.floor(n / size), rest = n % size;
+  if (!st) return fmtNum(rest);
+  const unit = `${fmtNum(st)} ${st === 1 ? 'Stack' : 'Stacks'}${size !== 64 ? ` à ${size}` : ''}`;
+  return rest ? `${unit} + ${fmtNum(rest)}` : unit;
+}
+const fmtQty = (n, name) => stacksMode() ? fmtStacks(n, stackSize(name)) : fmtNum(n);
+const qtyTitle = n => stacksMode() ? `${fmtNum(n)} Stück` : null;
+const stackSlots = (n, name) => Math.ceil(Math.max(0, n) / stackSize(name));
+function qtyUnitToggle(key) {
+  return segmented([{ v: 'stk', label: 'Stück' }, { v: 'stacks', label: 'Stacks' }], stacksMode() ? 'stacks' : 'stk',
+    v => { ui.prefs.qtyUnit = v; savePrefs(); render(); }, `qty-${key}`);
+}
+/* Mengenfeld: im Stack-Modus „Stacks + Rest“, gespeichert wird immer die Stückzahl */
+function qtyInput(value, set, name, fkey, cls = '') {
+  const size = stackSize(name);
+  const num = (val, fk, extra) => h('input', { class: 'input', type: 'number', min: '0', step: '1', inputmode: 'numeric', placeholder: '0', value: val ? String(val) : '', 'data-fkey': fk, ...extra });
+  if (!stacksMode() || size === 1) {
+    const el = num(value, fkey, { onInput: e => set(Math.max(0, numOrNull(e.target.value) || 0)) });
+    el.classList.add(...cls.split(' ').filter(Boolean));
+    return el;
+  }
+  let st = Math.floor(value / size), rest = value % size;
+  return h('div', { class: 'qty-pair ' + cls, title: `1 Stack = ${size} Stück` },
+    num(st, `${fkey}-s`, { 'aria-label': 'Stacks', onInput: e => { st = Math.max(0, numOrNull(e.target.value) || 0); set(st * size + rest); } }),
+    h('span', { class: 'qty-sep' }, size === 64 ? 'Stacks +' : `Stacks à ${size} +`),
+    num(rest, `${fkey}-r`, { 'aria-label': 'Rest in Stück', onInput: e => { rest = Math.max(0, numOrNull(e.target.value) || 0); set(st * size + rest); } }));
+}
+
 /* ===== Koordinaten ===== */
 const isNum = v => typeof v === 'number' && Number.isFinite(v);
 function locValid(l) {
@@ -1363,6 +1425,7 @@ function renderSidebar() {
       h('a', { class: 'nav-item' + (r.view === 'archive' ? ' active' : ''), href: '#/archiv' }, sym('archive'), 'Archiv', archivedCount ? h('span', { class: 'count' }, archivedCount) : null),
       h('a', { class: 'nav-item' + (r.view === 'trash' ? ' active' : ''), href: '#/papierkorb' }, sym('trash'), 'Papierkorb', trashCount ? h('span', { class: 'count' }, trashCount) : null),
       h('a', { class: 'nav-item' + (r.view === 'transfer' ? ' active' : ''), href: '#/uebertragen' }, sym('transfer'), 'Daten übertragen'),
+      h('div', { class: 'side-qty' }, h('span', null, 'Mengen'), qtyUnitToggle('side')),
       h('div', { class: 'side-tools' },
         h('button', { class: 'btn ghost small', onClick: openSettings }, sym('gear', 15), 'Einstellungen'),
         h('button', { class: 'btn ghost small', onClick: openHelp }, sym('help', 15), 'Hilfe')),
@@ -1431,10 +1494,12 @@ function renderDashboard(root, menuBtn, banners) {
   const inCol = c => allTasks.filter(t => !t.archived && t.column === c).length;
   const doneCount = allTasks.filter(isDone).length;
   let need = 0, have = 0, missingPieces = 0;
+  const stacked = stacksMode();
   for (const rows of matByProject.values()) {
     const tot = rowsTotals(rows);
     need += tot.need; have += tot.have;
-    missingPieces += baseView ? baseRows(rows, index).rows.reduce((sum, b) => sum + b.missing, 0) : tot.need - tot.have;
+    const miss = baseView ? baseRows(rows, index).rows.map(b => [b.name, b.missing]) : rows.map(r => [r.name, Math.max(0, r.needed - r.have)]);
+    missingPieces += miss.reduce((sum, [name, n]) => sum + (stacked ? stackSlots(n, name) : n), 0);
   }
   root.append(h('div', { class: 'kpi-row' },
     kpiTile('Aktive Projekte', fmtNum(projects.length), `${fmtNum(projects.filter(p => p.status === 'bau').length)} im Bau`),
@@ -1442,12 +1507,12 @@ function renderDashboard(root, menuBtn, banners) {
     kpiTile('In Arbeit', fmtNum(inCol('arbeit')), 'Aufgaben'),
     kpiTile('Erledigt', allTasks.length ? pctText(doneCount / allTasks.length) : '–', `${fmtNum(doneCount)} von ${fmtNum(allTasks.length)} Aufgaben`),
     kpiTile('Material gesammelt', need ? pctText(have / need) : '–',
-      need ? `${fmtNum(missingPieces)} ${baseView ? 'Stück Grundmaterial' : 'Stück'} fehlen` : 'Noch kein Material eingetragen')));
+      need ? `${fmtNum(missingPieces)} ${stacked ? 'Stacks' : 'Stück'}${baseView ? ' Grundmaterial' : ''} fehlen` : 'Noch kein Material eingetragen')));
 
   // Projekttabelle mit Materialien
   const mainPanel = h('section', { class: 'panel' },
     h('div', { class: 'panel-head' }, h('h2', { class: 'section' }, sym('grid', 16), 'Projekte'),
-      h('div', { class: 'head-tools' }, h('span', { class: 'muted small' }, 'Material:'), matViewToggle('dash'))),
+      h('div', { class: 'head-tools' }, h('span', { class: 'muted small' }, 'Mengen:'), qtyUnitToggle('dash'), h('span', { class: 'muted small' }, 'Material:'), matViewToggle('dash'))),
     projects.length ? projectsTable(projects, matByProject, baseView, index) : h('div', { class: 'empty' }, 'Alle Projekte sind archiviert.'));
 
   // Fehlendes Material über alle aktiven Projekte
@@ -1483,8 +1548,8 @@ function renderDashboard(root, menuBtn, banners) {
       h('thead', null, h('tr', null, h('th', null, baseView ? 'Grundmaterial' : 'Material'), h('th', { class: 'num' }, 'Fehlt'))),
       h('tbody', null, missing.map(m => h('tr', null,
         h('td', null, h('div', null, m.name), h('div', { class: 'sub' }, m.projects.map(p => p.name).join(', '))),
-        h('td', { class: 'num' }, h('div', { class: 'miss' }, fmtNum(m.miss)),
-          h('div', { class: 'sub' }, baseView ? `von ${fmtNum(m.need)}` : `${fmtNum(m.have)} / ${fmtNum(m.need)}`))))))
+        h('td', { class: 'num', title: qtyTitle(m.miss) }, h('div', { class: 'miss' }, fmtQty(m.miss, m.name)),
+          h('div', { class: 'sub' }, baseView ? `von ${fmtQty(m.need, m.name)}` : `${fmtQty(m.have, m.name)} / ${fmtQty(m.need, m.name)}`))))))
       : h('div', { class: 'empty' }, 'Alles gesammelt – oder noch kein Material eingetragen.'));
 
   root.append(h('div', { class: 'dash-layout' }, mainPanel, h('div', { class: 'dash-side' }, inProgressPanel(projects), matPanel)));
@@ -1531,8 +1596,8 @@ function materialChips(rows, baseView, index, href) {
   items.sort((a, b) => (a.done - b.done) || ((b.need - b.have) - (a.need - a.have)) || a.name.localeCompare(b.name, 'de'));
   return h('div', { class: 'mat-chips' },
     items.slice(0, MAX_CHIPS).map(m => h('span', { class: 'mat-chip' + (m.done ? ' done' : ''),
-      title: m.done ? `${m.name}: vollständig` : `${m.name}: ${fmtNum(Math.max(0, m.need - m.have))} fehlen` },
-      m.done ? sym('check', 11) : null, h('span', { class: 'nm' }, m.name), h('span', { class: 'qty' }, `${fmtNum(m.have)} / ${fmtNum(m.need)}`),
+      title: m.done ? `${m.name}: vollständig (${fmtNum(m.need)} Stück)` : `${m.name}: ${fmtNum(Math.max(0, m.need - m.have))} Stück fehlen` },
+      m.done ? sym('check', 11) : null, h('span', { class: 'nm' }, m.name), h('span', { class: 'qty' }, `${fmtQty(m.have, m.name)} / ${fmtQty(m.need, m.name)}`),
       h('span', { class: 'chip-bar' }, h('span', { style: { width: `${Math.round(m.need ? Math.min(1, m.have / m.need) * 100 : 0)}%` } })))),
     items.length > MAX_CHIPS ? h('a', { class: 'mat-chip more', href }, `+${items.length - MAX_CHIPS} weitere`) : null);
 }
@@ -1583,23 +1648,27 @@ function renderProjectView(root, p, menuBtn, banners) {
   if (p.archived) root.append(h('div', { class: 'banner info archived-note' }, sym('archive', 18), h('span', { class: 'text' }, 'Dieses Projekt ist archiviert.')));
   root.append(h('div', { class: 'proj-progress' }, bar('proj-tasks', p.id), bar('proj-mat', p.id)));
 
-  // Projektdetails: Beschreibung + Material
-  const open = !!ui.prefs.details[p.id];
+  // Material: immer sichtbar
   const ctx = liveCtx(p, `p-${p.id}`);
+  root.append(h('section', { class: 'panel proj-materials' },
+    h('div', { class: 'panel-head' }, h('h2', { class: 'section' }, sym('box', 16), 'Material'),
+      h('div', { class: 'head-tools' }, h('span', { class: 'muted small' }, 'Mengen:'), qtyUnitToggle(`p-${p.id}`))),
+    h('div', { class: 'proj-mat-body' },
+      h('div', null, h('div', { class: 'panel-title' }, 'Projekt-Material'), materialsEditor(p.materials, ctx)),
+      h('div', null, h('div', { class: 'panel-title' }, 'Gesamtbedarf (Projekt + Aufgaben)'),
+        h('div', { dataset: { live: 'mat-summary', pid: p.id } }, matSummaryTable(p))))));
+
+  // Beschreibung: einklappbar
+  const open = !!ui.prefs.details[p.id];
+  const hasDesc = !!p.descriptionMd.trim();
   const details = h('section', { class: 'details' },
     h('button', { class: 'details-toggle', 'aria-expanded': String(open), 'data-fkey': `p-${p.id}-details`,
       onClick: () => { ui.prefs.details[p.id] = !open; savePrefs(); render(); } },
-      h('span', { class: 'chev' }, sym('chev', 14)), h('strong', null, 'Projektdetails'),
-      h('span', { class: 'muted small' }, ' · Beschreibung & Materialliste')),
-    open ? h('div', { class: 'details-body' },
-      h('div', null, h('div', { class: 'panel-title' }, 'Beschreibung'),
-        p.descriptionMd.trim() ? h('div', { class: 'md' }) : h('p', { class: 'muted' }, 'Noch keine Beschreibung. Über „Bearbeiten“ hinzufügen.')),
-      h('div', null,
-        h('div', { class: 'panel-title' }, 'Projekt-Material'),
-        materialsEditor(p.materials, ctx),
-        h('div', { class: 'panel-title', style: { 'margin-top': '18px' } }, 'Gesamtbedarf (Projekt + Aufgaben)'),
-        h('div', { dataset: { live: 'mat-summary', pid: p.id } }, matSummaryTable(p)))) : null);
-  if (open && p.descriptionMd.trim()) $('.md', details).innerHTML = mdToHtml(p.descriptionMd);
+      h('span', { class: 'chev' }, sym('chev', 14)), h('strong', null, 'Beschreibung'),
+      hasDesc ? null : h('span', { class: 'muted small' }, ' · noch leer')),
+    open ? h('div', { class: 'details-body single' },
+      hasDesc ? h('div', { class: 'md' }) : h('p', { class: 'muted' }, 'Noch keine Beschreibung. Über „Bearbeiten“ hinzufügen.')) : null);
+  if (open && hasDesc) $('.md', details).innerHTML = mdToHtml(p.descriptionMd);
   root.append(details);
 
   // Werkzeugleiste mit Filtern
@@ -1639,17 +1708,17 @@ function matSummaryTable(p) {
       const pct = r.needed ? Math.min(1, r.have / r.needed) : 1;
       return h('tr', { title: 'Aus: ' + [...r.sources].join(', ') },
         h('td', null, r.name),
-        h('td', { class: 'num' }, fmtNum(r.needed)),
-        h('td', { class: 'num' }, fmtNum(r.have)),
-        h('td', { class: 'num ' + (miss ? 'miss' : 'okv') }, miss ? fmtNum(miss) : '✓'),
+        h('td', { class: 'num', title: qtyTitle(r.needed) }, fmtQty(r.needed, r.name)),
+        h('td', { class: 'num', title: qtyTitle(r.have) }, fmtQty(r.have, r.name)),
+        h('td', { class: 'num ' + (miss ? 'miss' : 'okv'), title: miss ? qtyTitle(miss) : null }, miss ? fmtQty(miss, r.name) : '✓'),
         h('td', { class: 'mini' }, h('div', { class: 'bar-track' }, h('div', { class: 'bar-fill', style: { width: `${Math.round(pct * 100)}%` } }))));
     }))));
 }
 /* Tabelle „Grundmaterial | Gesamt | Fehlt noch“ + Bauplan */
 function stepText(st) {
   const r = st.recipe;
-  return `${fmtNum(st.crafts)}× ${label(STATIONS, r.station)}: ` + r.inputs.map(i => `${fmtNum(i.qty * st.crafts)} ${i.name}`).join(' + ') +
-    ` → ${fmtNum(st.produced)} ${r.output}` + (st.leftover ? ` (${fmtNum(st.leftover)} übrig)` : '');
+  return `${fmtNum(st.crafts)}× ${label(STATIONS, r.station)}: ` + r.inputs.map(i => `${fmtQty(i.qty * st.crafts, i.name)} ${i.name}`).join(' + ') +
+    ` → ${fmtQty(st.produced, r.output)} ${r.output}` + (st.leftover ? ` (${fmtQty(st.leftover, r.output)} übrig)` : '');
 }
 function stepsList(steps, key, title) {
   const open = !!ui.stepsOpen[key];
@@ -1667,8 +1736,8 @@ function baseResult(res, key) {
       h('thead', null, h('tr', null, h('th', null, 'Grundmaterial'), h('th', { class: 'num' }, 'Gesamt'), h('th', { class: 'num' }, 'Fehlt noch'))),
       h('tbody', null, res.rows.map(b => h('tr', null,
         h('td', null, b.name, b.cyclic ? h('span', { class: 'muted', title: 'Kreislauf im Rezept' }, ' ⟳') : null),
-        h('td', { class: 'num' }, fmtNum(b.total)),
-        h('td', { class: 'num ' + (b.missing ? 'miss' : 'okv') }, b.missing ? fmtNum(b.missing) : '✓'))))),
+        h('td', { class: 'num', title: qtyTitle(b.total) }, fmtQty(b.total, b.name)),
+        h('td', { class: 'num ' + (b.missing ? 'miss' : 'okv'), title: b.missing ? qtyTitle(b.missing) : null }, b.missing ? fmtQty(b.missing, b.name) : '✓'))))),
     cycleNote(res.cycles),
     res.steps.length ? stepsList(res.steps, key, 'Bauplan (noch herzustellen)')
       : (res.anySteps ? h('div', { class: 'small muted' }, 'Alles gesammelt – nichts mehr herzustellen.') : null));
@@ -1929,7 +1998,8 @@ function checklistEditor(t, ctx) {
 function materialsEditor(list, ctx) {
   const k = ctx.key;
   const wrap = h('div', { class: 'mat-editor' });
-  if (list.length) wrap.append(h('div', { class: 'mat-head' }, h('span', null, 'Material'), h('span', null, 'Benötigt'), h('span', null, 'Gesammelt'), h('span')));
+  const stacked = stacksMode();
+  if (list.length && !stacked) wrap.append(h('div', { class: 'mat-head' }, h('span', null, 'Material'), h('span', null, 'Benötigt'), h('span', null, 'Gesammelt'), h('span')));
   list.forEach((m, i) => {
     const fill = h('div', { class: 'mat-row-fill' });
     const row = h('div', { class: 'mat-row' });
@@ -1938,14 +2008,22 @@ function materialsEditor(list, ctx) {
       fill.style.width = `${Math.round(pct * 100)}%`;
       row.classList.toggle('complete', m.needed > 0 && m.have >= m.needed);
     };
-    const num = (f, cls) => h('input', { class: 'input ' + cls, type: 'number', min: '0', step: '1', inputmode: 'numeric', placeholder: '0', value: m[f] ? String(m[f]) : '', 'data-fkey': `${k}-mat-${m.id}-${f}`,
-      onInput: e => { m[f] = Math.max(0, numOrNull(e.target.value) || 0); upd(); ctx.changed(); } });
-    row.append(
-      h('input', { class: 'input', value: m.name, placeholder: 'z. B. Stein', list: 'dl-material', autocomplete: 'off', 'data-fkey': `${k}-mat-${m.id}-name`,
-        onInput: e => { m.name = e.target.value; ctx.changed(); } }),
-      num('needed', 'need'), num('have', 'have'),
-      h('button', { class: 'icon-btn danger-hover', title: 'Material entfernen', onClick: () => { list.splice(i, 1); ctx.changed(); ctx.rerender(); } }, sym('x', 14)),
-      h('div', { class: 'mat-row-track' }, fill));
+    const sizeAtRender = stackSize(m.name);
+    const qty = (f, cls) => qtyInput(m[f], v => { m[f] = v; upd(); ctx.changed(); }, m.name, `${k}-mat-${m.id}-${f}`, cls);
+    const nameIn = h('input', { class: 'input', value: m.name, placeholder: 'z. B. Stein', list: 'dl-material', autocomplete: 'off', 'data-fkey': `${k}-mat-${m.id}-name`,
+      onInput: e => { m.name = e.target.value; ctx.changed(); },
+      // Andere Stapelgröße (z. B. Stein → Eimer): Stack-Felder neu berechnen, die Stückzahl bleibt
+      onChange: () => { if (stacked && stackSize(m.name) !== sizeAtRender) setTimeout(() => ctx.rerender(), 0); } });
+    const del = h('button', { class: 'icon-btn danger-hover', title: 'Material entfernen', onClick: () => { list.splice(i, 1); ctx.changed(); ctx.rerender(); } }, sym('x', 14));
+    if (stacked) {
+      row.classList.add('stacked');
+      row.append(nameIn, del, h('div', { class: 'qty-fields' },
+        h('div', { class: 'qty-field' }, h('span', null, 'Benötigt'), qty('needed', 'need')),
+        h('div', { class: 'qty-field' }, h('span', null, 'Gesammelt'), qty('have', 'have'))),
+        h('div', { class: 'mat-row-track' }, fill));
+    } else {
+      row.append(nameIn, qty('needed', 'need'), qty('have', 'have'), del, h('div', { class: 'mat-row-track' }, fill));
+    }
     upd();
     wrap.append(row);
   });
@@ -2297,6 +2375,9 @@ function openHelp() {
       'Blueprint rechnet Materiallisten dann über alle Stufen in Grundmaterialien um – in der Aufgabe, im Projekt-Gesamtbedarf und in der Übersicht (Umschalter „Grundmaterialien“).',
       'Gerechnet wird in ganzen Herstellungen; gleiche Zwischenprodukte werden vorher zusammengezählt. „Fehlt noch“ nutzt „Benötigt − Gesammelt“.',
       'Der Rechner im Rezeptbuch rechnet jede Menge aus, ohne dass du eine Aufgabe anlegen musst.']),
+    sec('Stück oder Stacks', ['Unten in der Seitenleiste (und bei den Materialien) schaltest du „Mengen: Stück | Stacks“ um. Die Einstellung gilt überall.',
+      'Im Stack-Modus steht z. B. „20 Stacks + 20“ statt 1.300; eingegeben wird dann mit zwei Feldern (Stacks + Rest). Gespeichert wird immer die Stückzahl.',
+      'Die Stapelgröße erkennt Blueprint am Namen: 64 normal, 16 z. B. für Eimer, Schilder, Banner, Eier, Schneebälle, Enderperlen; 1 für Werkzeuge, Rüstung, Betten, Boote, Tränke, gefüllte Eimer usw.']),
     sec('Daten übertragen (z. B. Handy → Laptop)', ['Auf dem alten Gerät: „Daten übertragen“ → „Teilen…“ oder „Kopieren“ und den Code an dich selbst schicken (E-Mail, WhatsApp, AirDrop, Notiz).',
       'Auf dem neuen Gerät: „Daten übertragen“ → Code ins Feld „Importieren“ einfügen → „Importieren“. Eine Backup-Datei (.json) lädst du dort mit „Datei wählen…“ oder ziehst sie am PC einfach in den Bereich.',
       'Hat das Gerät schon Daten: „Zusammenführen“ ergänzt Neues und übernimmt bei gleichen Einträgen die zuletzt geänderte Version. „Alles ersetzen“ übernimmt exakt den Stand des Codes.']),
@@ -2619,7 +2700,7 @@ function calcResult() {
   return h('div', { class: 'base-result' },
     h('table', { class: 'mat-table' },
       h('thead', null, h('tr', null, h('th', null, 'Grundmaterial'), h('th', { class: 'num' }, 'Menge'))),
-      h('tbody', null, res.base.map(b => h('tr', null, h('td', null, b.name, b.cyclic ? h('span', { class: 'muted', title: 'Kreislauf im Rezept' }, ' ⟳') : null), h('td', { class: 'num' }, fmtNum(b.qty)))))),
+      h('tbody', null, res.base.map(b => h('tr', null, h('td', null, b.name, b.cyclic ? h('span', { class: 'muted', title: 'Kreislauf im Rezept' }, ' ⟳') : null), h('td', { class: 'num', title: qtyTitle(b.qty) }, fmtQty(b.qty, b.name)))))),
     cycleNote(res.cycles),
     h('div', { class: 'panel-title', style: { margin: '6px 0 0' } }, 'Bauplan'),
     h('ol', { class: 'craft-steps' }, res.steps.map(st => h('li', null, stepText(st)))));
@@ -2631,15 +2712,16 @@ function renderRecipes(root, menuBtn, banners) {
       h('div', { class: 'muted' }, 'Trage ein, woraus etwas hergestellt wird – Blueprint rechnet Materiallisten dann in Grundmaterialien um.')),
     h('div', { class: 'head-actions' }, h('button', { class: 'btn primary', 'data-fkey': 'recipe-new', onClick: () => openRecipeModal(null) }, sym('plus'), 'Neues Rezept'))), banners);
 
+  const calcSize = stackSize(ui.calc.name);
   const result = h('div', { class: 'calc-result' }, calcResult());
   const upd = () => result.replaceChildren(calcResult());
   const calcPanel = h('section', { class: 'panel transfer-panel' },
     h('h2', { class: 'section' }, iconEl('crafting', 16), 'Rechner'),
     h('div', { class: 'calc-row' },
       h('input', { class: 'input', placeholder: 'Item, z. B. Steinziegeltreppe', list: 'dl-material', autocomplete: 'off', value: ui.calc.name, 'data-fkey': 'calc-name',
-        onInput: e => { ui.calc.name = e.target.value; upd(); } }),
-      h('input', { class: 'input', type: 'number', min: '1', step: '1', inputmode: 'numeric', placeholder: 'Menge', value: String(ui.calc.qty || ''), 'data-fkey': 'calc-qty',
-        onInput: e => { ui.calc.qty = Math.max(0, numOrNull(e.target.value) || 0); upd(); } })),
+        onInput: e => { ui.calc.name = e.target.value; upd(); },
+        onChange: () => { if (stacksMode() && stackSize(ui.calc.name) !== calcSize) setTimeout(render, 0); } }),
+      qtyInput(ui.calc.qty, v => { ui.calc.qty = v; upd(); }, ui.calc.name, 'calc-qty')),
     result);
 
   const listPanel = h('section', { class: 'panel transfer-panel' },
