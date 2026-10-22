@@ -347,6 +347,14 @@ table.mat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .tip .n { font-family: var(--font-px); color: var(--accent); font-size: 20px; }
 .tip p { margin: 6px 0 0; color: var(--text-2); }
 
+/* ===== Daten übertragen ===== */
+.transfer-panel { display: flex; flex-direction: column; gap: 10px; }
+.transfer-panel h2.section { margin-bottom: 2px; }
+.transfer-panel p { margin: 0; }
+textarea.code-box { font: 12px/1.45 ui-monospace, "Cascadia Mono", Consolas, monospace; word-break: break-all; min-height: 112px; resize: vertical; }
+.steps { margin: 0; padding-left: 22px; color: var(--text-2); }
+.steps li { margin: 6px 0; }
+
 /* ===== Archiv & Papierkorb ===== */
 .list-panel { display: flex; flex-direction: column; gap: 8px; }
 .list-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); flex-wrap: wrap; }
@@ -364,7 +372,7 @@ dialog.narrow { width: min(460px, calc(100vw - 32px)); }
 .dlg-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px 12px; border-bottom: 1px solid var(--border); }
 .dlg-head h2 { margin: 0; font-family: var(--font-px); font-weight: 400; font-size: 18px; flex: 1; }
 .dlg-body { padding: 16px 18px; overflow: auto; display: flex; flex-direction: column; gap: 14px; }
-.dlg-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 18px 16px; border-top: 1px solid var(--border); }
+.dlg-foot { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; padding: 12px 18px 16px; border-top: 1px solid var(--border); }
 .dlg-body h3 { margin: 6px 0 0; font-size: 14px; }
 .dlg-body p { margin: 0; color: var(--text-2); }
 .help h3 { font-family: var(--font-px); font-weight: 400; font-size: 14px; color: var(--accent); margin-top: 10px; }
@@ -608,7 +616,9 @@ const UI_PATHS = {
   link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   filter: '<path d="M3 5h18l-7 8v6l-4 2v-8z"/>',
-  box: '<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>'
+  box: '<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>',
+  transfer: '<path d="M7 4L3 8l4 4M3 8h14M17 12l4 4-4 4M21 16H7"/>',
+  share: '<path d="M12 15V3M8 7l4-4 4 4"/><path d="M5 11v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9"/>'
 };
 function sym(name, size = 16) {
   const s = document.createElement('span');
@@ -931,6 +941,10 @@ const ui = {
   pendingFocus: null,
   scrollToTask: null,
   mdMode: {},
+  exportCode: null,
+  exportBusy: false,
+  importText: '',
+  importError: '',
   prefs: { details: {} }
 };
 function loadPrefs() {
@@ -1000,20 +1014,24 @@ function renderBanners() {
 }
 
 /* ===== Bestätigungsdialog ===== */
-function confirmDialog(text, { title = 'Bist du sicher?', ok = 'OK', danger = false } = {}) {
+function choiceDialog(text, { title, choices }) {
   return new Promise(resolve => {
     const dlg = $('#confirm');
-    const done = v => { dlg.close(); resolve(v); };
-    dlg.onclose = () => resolve(false);
+    let settled = false;
+    const done = v => { if (settled) return; settled = true; dlg.close(); resolve(v); };
+    dlg.onclose = () => done(null);
     dlg.replaceChildren(h('div', { class: 'dlg' },
       h('div', { class: 'dlg-head' }, h('h2', null, title)),
-      h('div', { class: 'dlg-body' }, h('p', null, text)),
+      h('div', { class: 'dlg-body' }, [].concat(text).map(t => h('p', null, t))),
       h('div', { class: 'dlg-foot' },
-        h('button', { class: 'btn ghost', onClick: () => done(false) }, 'Abbrechen'),
-        h('button', { class: 'btn ' + (danger ? 'danger-solid' : 'primary'), 'data-autofocus': '', onClick: () => done(true) }, ok))));
+        h('button', { class: 'btn ghost', onClick: () => done(null) }, 'Abbrechen'),
+        choices.map(c => h('button', { class: 'btn ' + (c.cls || ''), 'data-autofocus': c.autofocus ? '' : null, onClick: () => done(c.v) }, c.label)))));
     dlg.showModal();
     $('[data-autofocus]', dlg)?.focus();
   });
+}
+function confirmDialog(text, { title = 'Bist du sicher?', ok = 'OK', danger = false } = {}) {
+  return choiceDialog(text, { title, choices: [{ v: true, label: ok, cls: danger ? 'danger-solid' : 'primary', autofocus: true }] }).then(v => v === true);
 }
 
 /* ===== Modal (für Formulare) ===== */
@@ -1095,6 +1113,7 @@ function parseRoute() {
   if (parts[0] === 'p' && parts[1]) return { view: 'project', id: decodeURIComponent(parts[1]) };
   if (parts[0] === 'archiv') return { view: 'archive' };
   if (parts[0] === 'papierkorb') return { view: 'trash' };
+  if (parts[0] === 'uebertragen') return { view: 'transfer' };
   return { view: 'dashboard' };
 }
 const go = hash => { if (location.hash === hash) render(); else location.hash = hash; };
@@ -1122,7 +1141,7 @@ function statusChip(s) { return h('span', { class: `status-chip st-${s}` }, labe
 function projBadge(p, size = 20, big = false) {
   return h('span', { class: 'proj-badge' + (big ? ' big' : ''), style: { '--pc': p.color } }, iconEl(p.icon, size));
 }
-async function copyText(text) {
+async function copyText(text, what) {
   let ok = false;
   try { await navigator.clipboard.writeText(text); ok = true; } catch (_) {
     const ta = h('textarea', { style: { position: 'fixed', opacity: '0' } });
@@ -1132,7 +1151,7 @@ async function copyText(text) {
     try { ok = document.execCommand('copy'); } catch (_) { ok = false; }
     ta.remove();
   }
-  toast(ok ? `Kopiert: ${text}` : 'Kopieren hat nicht geklappt', { error: !ok, timeout: 2200 });
+  toast(ok ? `Kopiert: ${what || text}` : 'Kopieren hat nicht geklappt', { error: !ok, timeout: 2200 });
 }
 function copyChip(lbl, text, small) {
   return h('button', { type: 'button', class: 'copy-chip' + (small ? ' small' : ''), title: 'Klicken zum Kopieren',
@@ -1240,6 +1259,7 @@ function renderSidebar() {
     h('div', { class: 'side-foot' },
       h('a', { class: 'nav-item' + (r.view === 'archive' ? ' active' : ''), href: '#/archiv' }, sym('archive'), 'Archiv', archivedCount ? h('span', { class: 'count' }, archivedCount) : null),
       h('a', { class: 'nav-item' + (r.view === 'trash' ? ' active' : ''), href: '#/papierkorb' }, sym('trash'), 'Papierkorb', trashCount ? h('span', { class: 'count' }, trashCount) : null),
+      h('a', { class: 'nav-item' + (r.view === 'transfer' ? ' active' : ''), href: '#/uebertragen' }, sym('transfer'), 'Daten übertragen'),
       h('div', { class: 'side-tools' },
         h('button', { class: 'btn ghost small', onClick: openSettings }, sym('gear', 15), 'Einstellungen'),
         h('button', { class: 'btn ghost small', onClick: openHelp }, sym('help', 15), 'Hilfe')),
@@ -1278,6 +1298,7 @@ function renderMain() {
   if (view === 'project') renderProjectView(inner, p, menuBtn, banners);
   else if (view === 'archive') renderArchive(inner, menuBtn, banners);
   else if (view === 'trash') renderTrash(inner, menuBtn, banners);
+  else if (view === 'transfer') renderTransfer(inner, menuBtn, banners);
   else renderDashboard(inner, menuBtn, banners);
   main.replaceChildren(inner);
   document.title = view === 'project' ? `${p.name || 'Projekt'} – Blueprint` : 'Blueprint';
@@ -1364,7 +1385,8 @@ function renderOnboarding() {
       tip('1', 'Lege mit „Neues Projekt“ dein erstes Bauprojekt an, z. B. „Spawn-Stadt“ – mit Icon, Farbe, Koordinaten und Deadline.'),
       tip('2', 'Füge im Board Aufgaben hinzu und ziehe die Karten per Drag & Drop von „Offen“ über „In Arbeit“ nach „Fertig“.'),
       tip('3', 'Richte unter „Einstellungen“ einen Backup-Ordner ein – dann sichert Blueprint jeden Tag automatisch.')),
-    h('button', { class: 'btn primary', 'data-fkey': 'onboard-new', onClick: () => openProjectModal(null) }, sym('plus'), 'Erstes Projekt anlegen'));
+    h('button', { class: 'btn primary', 'data-fkey': 'onboard-new', onClick: () => openProjectModal(null) }, sym('plus'), 'Erstes Projekt anlegen'),
+    h('p', { class: 'muted', style: { 'margin-top': '18px' } }, 'Schon Daten auf einem anderen Gerät? ', h('a', { href: '#/uebertragen' }, 'Daten übertragen')));
 }
 
 /* ----- Projekt-Ansicht ----- */
@@ -1518,7 +1540,7 @@ function wireDrop(body, p, col) {
       t.column = col;
     }
     touch(t);
-    columnTasks(p.id, col).forEach((x, i) => { x.order = i; });
+    columnTasks(p.id, col).forEach((x, i) => { if (x.order !== i) { x.order = i; touch(x); } });
     dragId = null;
     commit();
   });
@@ -1784,7 +1806,7 @@ function trashProject(p) {
     const now = nowIso();
     p.deletedAt = now;
     touch(p);
-    ts.forEach(t => { t.deletedAt = now; t.deletedWithProject = true; });
+    ts.forEach(t => { t.deletedAt = now; t.deletedWithProject = true; touch(t); });
     if (ui.route.view === 'project' && ui.route.id === p.id) { ui.route = { view: 'dashboard' }; history.replaceState(null, '', '#/'); }
     commit();
     toast(`„${p.name}“ liegt im Papierkorb.`, { action: { label: 'Wiederherstellen', fn: () => restoreProject(p) } });
@@ -1793,7 +1815,7 @@ function trashProject(p) {
 function restoreProject(p) {
   p.deletedAt = null;
   touch(p);
-  S().tasks.forEach(t => { if (t.projectId === p.id && t.deletedWithProject) { t.deletedAt = null; t.deletedWithProject = false; } });
+  S().tasks.forEach(t => { if (t.projectId === p.id && t.deletedWithProject) { t.deletedAt = null; t.deletedWithProject = false; touch(t); } });
   commit();
 }
 function trashTask(t) {
@@ -2023,7 +2045,7 @@ async function openSettings() {
         h('button', { class: 'btn', onClick: () => { downloadBackup(); modal.rerender(); } }, sym('download', 15), 'Als Datei herunterladen'))),
     h('div', { class: 'settings-group' },
       h('h3', null, 'Backup laden'),
-      h('p', null, 'Stellt alle Daten aus einer Backup-Datei wieder her. Die aktuellen Daten werden dabei ersetzt.'),
+      h('p', null, 'Stellt Daten aus einer Backup-Datei wieder her. Hat dieses Gerät schon Daten, wählst du: zusammenführen oder alles ersetzen.'),
       h('div', { class: 'btn-row' }, h('button', { class: 'btn', onClick: pickImportFile }, sym('upload', 15), 'Backup-Datei wählen…'))),
     h('div', { class: 'settings-group' },
       h('h3', null, 'Über'),
@@ -2051,6 +2073,9 @@ function openHelp() {
       'Beim Öffnen erscheint ein Hinweis, wenn etwas fällig ist. Die Liste steht auf dem Dashboard.']),
     sec('Papierkorb & Archiv', [`Gelöschtes landet im Papierkorb und wird nach ${TRASH_DAYS} Tagen endgültig entfernt.`,
       'Erledigte Aufgaben bleiben in „Fertig“, bis du sie archivierst.']),
+    sec('Daten übertragen (z. B. Handy → Laptop)', ['Auf dem alten Gerät: „Daten übertragen“ → „Teilen…“ oder „Kopieren“ und den Code an dich selbst schicken (E-Mail, WhatsApp, AirDrop, Notiz).',
+      'Auf dem neuen Gerät: „Daten übertragen“ → Code ins Feld „Importieren“ einfügen → „Importieren“.',
+      'Hat das Gerät schon Daten: „Zusammenführen“ ergänzt Neues und übernimmt bei gleichen Einträgen die zuletzt geänderte Version. „Alles ersetzen“ übernimmt exakt den Stand des Codes.']),
     sec('Backups', ['Einstellungen → „Backup-Ordner wählen“. Danach speichert Blueprint beim ersten Öffnen am Tag automatisch.',
       'Fragt der Browser nach der Berechtigung, reicht ein Klick auf „Backup speichern“ im Hinweis.',
       `Im Ordner bleiben die letzten ${BACKUP_KEEP} Backups. Wiederherstellen: Einstellungen → „Backup-Datei wählen…“.`,
@@ -2168,24 +2193,158 @@ function pickImportFile() {
     if (!file) return;
     let obj;
     try { obj = JSON.parse(await file.text()); } catch (_) { toast('Die Datei ist kein gültiges Backup (kein JSON).', { error: true }); return; }
-    const data = obj && obj.app === 'blueprint' && obj.data ? obj.data : obj;
-    if (!data || !Array.isArray(data.projects) || !Array.isArray(data.tasks)) { toast('Die Datei ist kein Blueprint-Backup.', { error: true }); return; }
-    const when = obj.exportedAt ? ` vom ${new Date(obj.exportedAt).toLocaleString('de-DE')}` : '';
-    const yes = await confirmDialog(`Backup${when} mit ${data.projects.length} Projekt(en) und ${data.tasks.length} Aufgabe(n) laden? Alle aktuellen Daten werden ersetzt.`,
-      { title: 'Backup laden', ok: 'Ersetzen & laden', danger: true });
-    if (!yes) return;
-    try { localStorage.setItem(`${STORAGE_KEY}:vor-import`, JSON.stringify(S())); } catch (_) { /* voll */ }
-    const keep = { lastBackupDate: S().settings.lastBackupDate, backupDirName: S().settings.backupDirName };
-    store.replace({ ...data, settings: { ...(data.settings || {}), ...keep } });
-    ui.expandedTaskId = null;
-    modal.close();
-    applyAccent();
-    go('#/');
-    render();
-    toast('Backup geladen.');
+    const data = unwrapPayload(obj);
+    if (!data) { toast('Die Datei ist kein Blueprint-Backup.', { error: true }); return; }
+    await importPayload(data, { kind: 'Backup', exportedAt: obj.exportedAt });
   });
   document.body.append(inp);
   inp.click();
+}
+
+/* ===== Daten übertragen (Code zum Kopieren & Einfügen) ===== */
+const CODE_PREFIX = 'BLUEPRINT1:';
+const canCompress = () => typeof CompressionStream === 'function' && typeof DecompressionStream === 'function';
+function bytesToB64url(bytes) {
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function b64urlToBytes(str) {
+  const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  const bin = atob(b64 + '==='.slice((b64.length + 3) % 4));
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+async function encodeTransfer() {
+  const json = JSON.stringify(exportData());
+  if (!canCompress()) return json;
+  const stream = new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'));
+  return CODE_PREFIX + bytesToB64url(new Uint8Array(await new Response(stream).arrayBuffer()));
+}
+async function decodeTransfer(text) {
+  const t = text.trim();
+  if (t.startsWith('{')) return JSON.parse(t);
+  const compact = t.replace(/\s+/g, '');
+  if (!compact.startsWith(CODE_PREFIX)) throw new Error('Das ist kein Blueprint-Code. Er beginnt immer mit „BLUEPRINT1:“.');
+  if (!canCompress()) throw new Error('Dieser Browser kann den Code nicht entpacken. Bitte Browser aktualisieren oder eine Backup-Datei nutzen.');
+  let json;
+  try {
+    const stream = new Blob([b64urlToBytes(compact.slice(CODE_PREFIX.length))]).stream().pipeThrough(new DecompressionStream('gzip'));
+    json = await new Response(stream).text();
+  } catch (_) {
+    throw new Error('Der Code ist unvollständig oder beschädigt. Bitte den kompletten Code kopieren und erneut einfügen.');
+  }
+  return JSON.parse(json);
+}
+function unwrapPayload(obj) {
+  const data = obj && obj.app === 'blueprint' && obj.data ? obj.data : obj;
+  return data && Array.isArray(data.projects) && Array.isArray(data.tasks) ? data : null;
+}
+function mergeState(local, incoming) {
+  const count = { added: 0, updated: 0, same: 0 };
+  const time = x => Date.parse(x.updatedAt) || 0;
+  for (const key of ['projects', 'tasks']) {
+    const index = new Map(local[key].map((x, i) => [x.id, i]));
+    for (const item of incoming[key]) {
+      const i = index.get(item.id);
+      if (i == null) { index.set(item.id, local[key].push(item) - 1); count.added++; }
+      else if (time(item) > time(local[key][i])) { local[key][i] = item; count.updated++; }
+      else count.same++;
+    }
+  }
+  return count;
+}
+async function importPayload(data, { kind, exportedAt }) {
+  const incoming = normalize(data);
+  const when = exportedAt ? ` vom ${new Date(exportedAt).toLocaleString('de-DE')}` : '';
+  const what = `${kind}${when} mit ${incoming.projects.length} Projekt(en) und ${incoming.tasks.length} Aufgabe(n)`;
+  let mode;
+  if (!hasData()) {
+    mode = (await confirmDialog(`${what} übernehmen?`, { title: `${kind} laden`, ok: 'Übernehmen' })) ? 'replace' : null;
+  } else {
+    mode = await choiceDialog([
+      `${what} laden. Auf diesem Gerät sind schon ${S().projects.length} Projekt(e) und ${S().tasks.length} Aufgabe(n).`,
+      '„Zusammenführen“ ergänzt Neues und übernimmt bei gleichen Einträgen die zuletzt geänderte Version. „Alles ersetzen“ überschreibt den Stand auf diesem Gerät.'
+    ], { title: `${kind} laden`, choices: [{ v: 'replace', label: 'Alles ersetzen', cls: 'danger-solid' }, { v: 'merge', label: 'Zusammenführen', cls: 'primary', autofocus: true }] });
+  }
+  if (!mode) return false;
+  flushSave();
+  try { localStorage.setItem(`${STORAGE_KEY}:vor-import`, JSON.stringify(S())); } catch (_) { /* voll */ }
+  let msg;
+  if (mode === 'merge') {
+    const c = mergeState(S(), incoming);
+    store.save();
+    msg = `Zusammengeführt: ${c.added} neu, ${c.updated} aktualisiert, ${c.same} unverändert.`;
+  } else {
+    const keep = { lastBackupDate: S().settings.lastBackupDate, backupDirName: S().settings.backupDirName };
+    store.replace({ ...incoming, settings: { ...incoming.settings, ...keep } });
+    msg = `${kind} geladen.`;
+  }
+  ui.expandedTaskId = null;
+  ui.importText = '';
+  ui.importError = '';
+  ui.exportCode = null;
+  modal.close();
+  applyAccent();
+  go('#/');
+  render();
+  toast(msg);
+  return true;
+}
+async function importFromText() {
+  const text = ui.importText.trim();
+  const fail = m => { ui.importError = m; ui.pendingFocus = 'transfer-import'; render(); };
+  if (!text) return fail('Bitte zuerst einen Code einfügen.');
+  let obj;
+  try { obj = await decodeTransfer(text); } catch (e) {
+    return fail(e instanceof SyntaxError ? 'Der Text ist kein gültiger Blueprint-Code. Bitte den kompletten Code kopieren und erneut einfügen.' : e.message);
+  }
+  const data = unwrapPayload(obj);
+  if (!data) return fail('Der Code enthält keine Blueprint-Daten.');
+  ui.importError = '';
+  await importPayload(data, { kind: 'Übertragungs-Code', exportedAt: obj.exportedAt });
+}
+async function shareCode(code) {
+  try { await navigator.share({ title: 'Blueprint-Daten', text: code }); }
+  catch (e) { if (e.name !== 'AbortError') toast('Teilen hat nicht geklappt. Nutze „Kopieren“.', { error: true }); }
+}
+function renderTransfer(root, menuBtn, banners) {
+  if (ui.exportCode == null && !ui.exportBusy) {
+    ui.exportBusy = true;
+    encodeTransfer()
+      .then(c => { if (ui.route.view === 'transfer') ui.exportCode = c; })
+      .catch(e => { console.error(e); toast('Code konnte nicht erstellt werden: ' + e.message, { error: true }); })
+      .finally(() => { ui.exportBusy = false; if (ui.route.view === 'transfer') render(); });
+  }
+  const code = ui.exportCode;
+  root.append(h('header', { class: 'view-head' }, menuBtn, h('div', { class: 'head-text' }, h('h1', null, 'Daten übertragen'),
+    h('div', { class: 'muted' }, 'Projekte und Aufgaben per Code von einem Gerät aufs andere bringen – z. B. vom Handy auf den Laptop.'))), banners);
+  const exportPanel = h('section', { class: 'panel transfer-panel' },
+    h('h2', { class: 'section' }, sym('upload', 16), '1 · Exportieren'),
+    h('p', { class: 'muted' }, 'Auf dem Gerät, auf dem deine Daten sind.'),
+    h('p', null, hasData() ? `Enthält ${S().projects.length} Projekt(e) und ${S().tasks.length} Aufgabe(n), inklusive Archiv und Papierkorb.` : 'Auf diesem Gerät sind noch keine Daten.'),
+    h('textarea', { class: 'input code-box', readonly: true, rows: 5, 'data-fkey': 'transfer-export', value: code || '', placeholder: code == null ? 'Code wird erstellt …' : '',
+      onFocus: e => e.target.select() }),
+    code ? h('div', { class: 'small muted' }, `${fmtNum(code.length)} Zeichen`) : null,
+    h('div', { class: 'btn-row' },
+      h('button', { class: 'btn primary', disabled: !code, 'data-fkey': 'transfer-copy', onClick: () => copyText(code, 'Übertragungs-Code') }, sym('copy', 15), 'Kopieren'),
+      typeof navigator.share === 'function' ? h('button', { class: 'btn', disabled: !code, 'data-fkey': 'transfer-share', onClick: () => shareCode(code) }, sym('share', 15), 'Teilen…') : null,
+      h('button', { class: 'btn ghost', onClick: downloadBackup }, sym('download', 15), 'Als Datei herunterladen')));
+  const importPanel = h('section', { class: 'panel transfer-panel' },
+    h('h2', { class: 'section' }, sym('download', 16), '2 · Importieren'),
+    h('p', { class: 'muted' }, 'Auf dem Gerät, das die Daten bekommen soll.'),
+    h('textarea', { class: 'input code-box', rows: 5, 'data-fkey': 'transfer-import', placeholder: 'Code hier einfügen (beginnt mit BLUEPRINT1:)', value: ui.importText,
+      onInput: e => { ui.importText = e.target.value; if (ui.importError) { ui.importError = ''; $('.transfer-err')?.remove(); } } }),
+    ui.importError ? h('div', { class: 'err transfer-err', role: 'alert' }, ui.importError) : null,
+    h('div', { class: 'btn-row' }, h('button', { class: 'btn primary', 'data-fkey': 'transfer-import-btn', onClick: importFromText }, sym('check', 15), 'Importieren')));
+  const how = h('section', { class: 'panel wide' },
+    h('h2', { class: 'section' }, sym('help', 16), 'So geht’s: Handy → Laptop'),
+    h('ol', { class: 'steps' },
+      h('li', null, 'Auf dem Handy: hier auf „Teilen…“ tippen und den Code an dich selbst schicken (E-Mail, WhatsApp, AirDrop) – oder „Kopieren“ und in eine Notiz einfügen.'),
+      h('li', null, 'Auf dem Laptop: Blueprint öffnen → „Daten übertragen“ → den Code ins Feld „Importieren“ einfügen.'),
+      h('li', null, 'Auf „Importieren“ klicken. Hat der Laptop schon Daten, wählst du „Zusammenführen“ oder „Alles ersetzen“.')));
+  root.append(h('div', { class: 'dash-grid' }, exportPanel, importPanel, how));
 }
 
 /* ===== Start ===== */
@@ -2200,6 +2359,7 @@ function init() {
   window.addEventListener('hashchange', () => {
     ui.route = parseRoute();
     ui.expandedTaskId = null;
+    if (ui.route.view !== 'transfer') { ui.exportCode = null; ui.importText = ''; ui.importError = ''; }
     document.body.classList.remove('side-open');
     $('#main').scrollTop = 0;
     render();

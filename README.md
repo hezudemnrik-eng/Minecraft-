@@ -30,11 +30,23 @@ Manchmal fragt der Browser beim Start erneut nach der Erlaubnis. Dann erscheint 
 
 Unten links in der Seitenleiste steht, wann das letzte Backup war.
 
+## Daten übertragen (z. B. Handy → Laptop)
+
+Ohne Dateien, per Code zum Kopieren und Einfügen:
+
+1. **Auf dem Handy:** In Blueprint auf **„Daten übertragen“** tippen → **„Teilen…“** und den Code an dich selbst schicken (E-Mail, WhatsApp, AirDrop) – oder **„Kopieren“** und in eine Notiz einfügen.
+2. **Auf dem Laptop:** Blueprint öffnen → **„Daten übertragen“** → den Code ins Feld **„Importieren“** einfügen.
+3. **„Importieren“** klicken. Ist der Laptop noch leer, werden die Daten nach einer Bestätigung übernommen. Hat er schon Daten, wählst du:
+   - **Zusammenführen:** Neues kommt dazu, bei gleichen Einträgen gewinnt die zuletzt geänderte Version.
+   - **Alles ersetzen:** Der Laptop übernimmt exakt den Stand vom Handy.
+
+Gut zu wissen: Beim Zusammenführen tauchen Einträge wieder auf, die du nur auf dem Zielgerät endgültig gelöscht hast (Papierkorb geleert). Mit „Alles ersetzen“ passiert das nicht.
+
 ## Backup wiederherstellen
 
 1. **Einstellungen** → **Backup-Datei wählen…**
 2. Die gewünschte `blueprint-backup-….json` aus dem Backup-Ordner auswählen.
-3. Bestätigen. Alle aktuellen Daten werden durch das Backup ersetzt.
+3. Bestätigen. Hat das Gerät schon Daten, wählst du „Zusammenführen“ oder „Alles ersetzen“.
 
 So ziehst du auch auf einen neuen PC oder einen anderen Browser um: Datei kopieren, Backup laden, fertig.
 
@@ -47,6 +59,7 @@ So ziehst du auch auf einen neuen PC oder einen anderen Browser um: Datei kopier
 - **Material** pro Aufgabe und pro Projekt. Die Projekt-Summe fasst gleiche Namen zusammen, Fortschrittsbalken zeigen, was noch fehlt.
 - **Dashboard** mit „Bald fällig & überfällig“, fehlendem Material über alle Projekte und dem Fortschritt jedes Projekts
 - **Filter** nach Priorität, Dimension, Zuständigem und „nur überfällig“
+- **Daten übertragen** zwischen Geräten per Code (Kopieren/Teilen → Einfügen), wahlweise zusammenführen oder ersetzen
 - **Archiv** für fertige Projekte und erledigte Aufgaben, **Papierkorb** mit Wiederherstellen (leert sich nach 7 Tagen)
 - **Akzentfarbe** wählbar: Gras-Grün, Diamant-Türkis, Redstone-Rot, Gold
 - **Hilfe** direkt in der App über den Knopf „Hilfe“
