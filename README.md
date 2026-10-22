@@ -10,6 +10,14 @@ Blueprint ist eine Todo-App für Bauprojekte. Sie besteht aus **einer einzigen D
 
 > **Wichtig:** Lass die Datei immer am selben Ort und öffne sie immer im selben Browser. Die Daten gehören zu diesem Browser auf diesem PC.
 
+### Oder online über GitHub Pages
+
+Blueprint ist auch unter **https://hezudemnrik-eng.github.io/Minecraft-/** erreichbar, auf dem PC und am Handy.
+
+- Auch online bleiben deine Daten **nur im jeweiligen Browser auf dem jeweiligen Gerät**. Niemand sonst sieht sie, auch nicht über die Adresse.
+- Die Online-Version und die heruntergeladene Datei haben **getrennte Daten**. Zum Umziehen: in der einen Version unter Einstellungen „Als Datei herunterladen“ wählen, in der anderen „Backup-Datei wählen…“.
+- Am Handy gibt es keinen Backup-Ordner. Dort lädt Blueprint das Backup als Datei herunter.
+
 ## Erstes Backup einrichten (einmalig, ca. 1 Minute)
 
 1. In Blueprint unten links auf **Einstellungen** klicken.
