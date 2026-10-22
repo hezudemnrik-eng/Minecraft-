@@ -53,6 +53,7 @@ Ohne Dateien, per Code zum Kopieren und Einfügen:
 
 1. **Auf dem Handy:** In Blueprint auf **„Daten übertragen“** tippen → **„Teilen…“** und den Code an dich selbst schicken (E-Mail, WhatsApp, AirDrop) – oder **„Kopieren“** und in eine Notiz einfügen.
 2. **Auf dem Laptop:** Blueprint öffnen → **„Daten übertragen“** → den Code ins Feld **„Importieren“** einfügen.
+   Hast du stattdessen die **Backup-Datei (.json)**, z. B. über „Als Datei herunterladen“: dort auf **„Datei wählen…“** klicken oder die Datei am PC einfach in den Import-Bereich ziehen.
 3. **„Importieren“** klicken. Ist der Laptop noch leer, werden die Daten nach einer Bestätigung übernommen. Hat er schon Daten, wählst du:
    - **Zusammenführen:** Neues kommt dazu, bei gleichen Einträgen gewinnt die zuletzt geänderte Version.
    - **Alles ersetzen:** Der Laptop übernimmt exakt den Stand vom Handy.
