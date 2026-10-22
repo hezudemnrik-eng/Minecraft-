@@ -377,6 +377,8 @@ table.mat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .transfer-panel p { margin: 0; }
 textarea.code-box { font: 12px/1.45 ui-monospace, "Cascadia Mono", Consolas, monospace; word-break: break-all; min-height: 112px; resize: vertical; }
 .steps { margin: 0; padding-left: 22px; color: var(--text-2); }
+.transfer-panel.drop-active { outline: 2px dashed var(--accent); outline-offset: -6px; background: var(--accent-soft); }
+.drop-hint { margin: 0; }
 .steps li { margin: 6px 0; }
 
 /* ===== Archiv & Papierkorb ===== */
@@ -1881,9 +1883,9 @@ function checklistEditor(t, ctx) {
       h('button', { class: 'icon-btn danger-hover', title: 'Punkt entfernen', onClick: () => { t.checklist.splice(i, 1); ctx.changed(); ctx.rerender(); } }, sym('x', 14)));
     wrap.append(row);
   });
-  const add = () => {
-    const inp = $(`[data-fkey="${CSS.escape(k + '-chk-add')}"]`);
-    const v = inp ? inp.value.trim() : '';
+  const add = inp => {
+    if (!inp.isConnected) return;
+    const v = inp.value.trim();
     if (!v) return;
     t.checklist.push({ id: uid(), text: v, done: false });
     inp.value = '';
@@ -1892,8 +1894,8 @@ function checklistEditor(t, ctx) {
   };
   wrap.append(h('div', { class: 'add-row' },
     h('input', { class: 'input', placeholder: 'Punkt hinzufügen (Enter)', 'data-fkey': `${k}-chk-add`,
-      onKeydown: e => { if (e.key === 'Enter') { e.preventDefault(); add(); } },
-      onBlur: () => setTimeout(add, 0) })));
+      onKeydown: e => { if (e.key === 'Enter') { e.preventDefault(); add(e.target); } },
+      onBlur: e => { const inp = e.target; setTimeout(() => add(inp), 0); } })));
   return wrap;
 }
 
@@ -1928,9 +1930,9 @@ function materialsEditor(list, ctx) {
 
 function tagsEditor(t, ctx) {
   const k = ctx.key;
-  const add = () => {
-    const inp = $(`[data-fkey="${CSS.escape(k + '-tag-add')}"]`);
-    const v = inp ? inp.value.replace(/,/g, ' ').trim() : '';
+  const add = inp => {
+    if (!inp.isConnected) return;
+    const v = inp.value.replace(/,/g, ' ').trim();
     if (!v) return;
     if (!t.tags.some(x => x.toLowerCase() === v.toLowerCase())) t.tags.push(v);
     inp.value = '';
@@ -1941,16 +1943,16 @@ function tagsEditor(t, ctx) {
     t.tags.map((tg, i) => h('span', { class: 'tag' }, tg,
       h('button', { type: 'button', class: 'tag-x', title: 'Tag entfernen', onClick: () => { t.tags.splice(i, 1); ctx.changed(); ctx.rerender(); } }, '×'))),
     h('input', { class: 'input tag-input', placeholder: 'Tag + Enter', list: 'dl-tags', autocomplete: 'off', 'data-fkey': `${k}-tag-add`,
-      onKeydown: e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(); } },
-      onBlur: () => setTimeout(add, 0) }));
+      onKeydown: e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(e.target); } },
+      onBlur: e => { const inp = e.target; setTimeout(() => add(inp), 0); } }));
 }
 
 const isImageUrl = u => /\.(png|jpe?g|gif|webp|bmp|avif)(\?.*)?$/i.test(u);
 function linksEditor(t, ctx) {
   const k = ctx.key;
-  const add = () => {
-    const inp = $(`[data-fkey="${CSS.escape(k + '-link-add')}"]`);
-    let v = inp ? inp.value.trim() : '';
+  const add = inp => {
+    if (!inp.isConnected) return;
+    let v = inp.value.trim();
     if (!v) return;
     if (!/^https?:\/\//i.test(v)) v = 'https://' + v;
     t.imageLinks.push(v);
@@ -1964,8 +1966,8 @@ function linksEditor(t, ctx) {
       h('a', { href: u, target: '_blank', rel: 'noopener noreferrer', title: u }, u),
       h('button', { class: 'icon-btn danger-hover', title: 'Link entfernen', onClick: () => { t.imageLinks.splice(i, 1); ctx.changed(); ctx.rerender(); } }, sym('x', 14)))),
     h('div', { class: 'add-row' }, h('input', { class: 'input', placeholder: 'Bild-Link einfügen (Imgur, Discord …) + Enter', 'data-fkey': `${k}-link-add`,
-      onKeydown: e => { if (e.key === 'Enter') { e.preventDefault(); add(); } },
-      onBlur: () => setTimeout(add, 0) })));
+      onKeydown: e => { if (e.key === 'Enter') { e.preventDefault(); add(e.target); } },
+      onBlur: e => { const inp = e.target; setTimeout(() => add(inp), 0); } })));
 }
 
 /* ===== Aktionen ===== */
@@ -2271,7 +2273,7 @@ function openHelp() {
       'Gerechnet wird in ganzen Herstellungen; gleiche Zwischenprodukte werden vorher zusammengezählt. „Fehlt noch“ nutzt „Benötigt − Gesammelt“.',
       'Der Rechner im Rezeptbuch rechnet jede Menge aus, ohne dass du eine Aufgabe anlegen musst.']),
     sec('Daten übertragen (z. B. Handy → Laptop)', ['Auf dem alten Gerät: „Daten übertragen“ → „Teilen…“ oder „Kopieren“ und den Code an dich selbst schicken (E-Mail, WhatsApp, AirDrop, Notiz).',
-      'Auf dem neuen Gerät: „Daten übertragen“ → Code ins Feld „Importieren“ einfügen → „Importieren“.',
+      'Auf dem neuen Gerät: „Daten übertragen“ → Code ins Feld „Importieren“ einfügen → „Importieren“. Eine Backup-Datei (.json) lädst du dort mit „Datei wählen…“ oder ziehst sie am PC einfach in den Bereich.',
       'Hat das Gerät schon Daten: „Zusammenführen“ ergänzt Neues und übernimmt bei gleichen Einträgen die zuletzt geänderte Version. „Alles ersetzen“ übernimmt exakt den Stand des Codes.']),
     sec('Backups', ['Einstellungen → „Backup-Ordner wählen“. Danach speichert Blueprint beim ersten Öffnen am Tag automatisch.',
       'Fragt der Browser nach der Berechtigung, reicht ein Klick auf „Backup speichern“ im Hinweis.',
@@ -2383,20 +2385,48 @@ async function dailyBackupCheck() {
   showBanner({ id: 'backup', kind: 'info', text: `Das heutige Backup ist bereit. Der Browser möchte einmal bestätigen, dass Blueprint in „${dir.name}“ speichern darf.`,
     actions: [{ label: 'Backup speichern', primary: true, fn: () => backupNow(true) }] });
 }
+/* Backup-Datei (.json) oder Textdatei mit Übertragungs-Code laden */
+async function importFromFile(file) {
+  if (!file) return false;
+  let text;
+  try { text = await file.text(); } catch (_) { toast('Die Datei konnte nicht gelesen werden.', { error: true }); return false; }
+  const t = text.replace(/^\uFEFF/, '').trim();
+  let obj;
+  if (t.startsWith('{')) {
+    try { obj = JSON.parse(t); } catch (_) { toast('Die Datei ist kein gültiges Backup (kein JSON).', { error: true }); return false; }
+  } else if (t.replace(/\s+/g, '').startsWith(CODE_PREFIX)) {
+    try { obj = await decodeTransfer(t); } catch (e) { toast(e instanceof SyntaxError ? 'Der Code in der Datei ist beschädigt.' : e.message, { error: true }); return false; }
+  } else {
+    toast('Die Datei ist kein Blueprint-Backup.', { error: true });
+    return false;
+  }
+  const data = unwrapPayload(obj);
+  if (!data) { toast('Die Datei ist kein Blueprint-Backup.', { error: true }); return false; }
+  return importPayload(data, { kind: 'Backup', exportedAt: obj.exportedAt });
+}
 function pickImportFile() {
-  const inp = h('input', { type: 'file', accept: '.json,application/json', style: { display: 'none' } });
-  inp.addEventListener('change', async () => {
-    const file = inp.files[0];
-    inp.remove();
-    if (!file) return;
-    let obj;
-    try { obj = JSON.parse(await file.text()); } catch (_) { toast('Die Datei ist kein gültiges Backup (kein JSON).', { error: true }); return; }
-    const data = unwrapPayload(obj);
-    if (!data) { toast('Die Datei ist kein Blueprint-Backup.', { error: true }); return; }
-    await importPayload(data, { kind: 'Backup', exportedAt: obj.exportedAt });
-  });
+  const inp = h('input', { type: 'file', accept: '.json,.txt,application/json,text/plain', style: { display: 'none' } });
+  inp.addEventListener('change', () => { const file = inp.files[0]; inp.remove(); importFromFile(file); });
+  inp.addEventListener('cancel', () => inp.remove());
   document.body.append(inp);
   inp.click();
+}
+const hasFiles = e => [...((e.dataTransfer && e.dataTransfer.types) || [])].includes('Files');
+function wireFileDrop(el) {
+  el.addEventListener('dragover', e => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    el.classList.add('drop-active');
+  });
+  el.addEventListener('dragleave', e => { if (!el.contains(e.relatedTarget)) el.classList.remove('drop-active'); });
+  el.addEventListener('drop', e => {
+    el.classList.remove('drop-active');
+    const file = e.dataTransfer && e.dataTransfer.files[0];
+    if (file) { e.preventDefault(); importFromFile(file); return; }
+    const text = e.dataTransfer && e.dataTransfer.getData('text/plain');
+    if (text && e.target.tagName !== 'TEXTAREA') { e.preventDefault(); ui.importText = text; ui.importError = ''; render(); }
+  });
 }
 
 /* ===== Daten übertragen (Code zum Kopieren & Einfügen) ===== */
@@ -2529,18 +2559,23 @@ function renderTransfer(root, menuBtn, banners) {
       h('button', { class: 'btn primary', disabled: !code, 'data-fkey': 'transfer-copy', onClick: () => copyText(code, 'Übertragungs-Code') }, sym('copy', 15), 'Kopieren'),
       typeof navigator.share === 'function' ? h('button', { class: 'btn', disabled: !code, 'data-fkey': 'transfer-share', onClick: () => shareCode(code) }, sym('share', 15), 'Teilen…') : null,
       h('button', { class: 'btn ghost', onClick: downloadBackup }, sym('download', 15), 'Als Datei herunterladen')));
-  const importPanel = h('section', { class: 'panel transfer-panel' },
+  const canDropFiles = !!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+  const importPanel = h('section', { class: 'panel transfer-panel', 'data-dropzone': '' },
     h('h2', { class: 'section' }, sym('download', 16), '2 · Importieren'),
-    h('p', { class: 'muted' }, 'Auf dem Gerät, das die Daten bekommen soll.'),
+    h('p', { class: 'muted' }, 'Auf dem Gerät, das die Daten bekommen soll: Code einfügen oder Backup-Datei laden.'),
     h('textarea', { class: 'input code-box', rows: 5, 'data-fkey': 'transfer-import', placeholder: 'Code hier einfügen (beginnt mit BLUEPRINT1:)', value: ui.importText,
       onInput: e => { ui.importText = e.target.value; if (ui.importError) { ui.importError = ''; $('.transfer-err')?.remove(); } } }),
     ui.importError ? h('div', { class: 'err transfer-err', role: 'alert' }, ui.importError) : null,
-    h('div', { class: 'btn-row' }, h('button', { class: 'btn primary', 'data-fkey': 'transfer-import-btn', onClick: importFromText }, sym('check', 15), 'Importieren')));
+    h('div', { class: 'btn-row' },
+      h('button', { class: 'btn primary', 'data-fkey': 'transfer-import-btn', onClick: importFromText }, sym('check', 15), 'Importieren'),
+      h('button', { class: 'btn', 'data-fkey': 'transfer-file-btn', onClick: pickImportFile }, sym('upload', 15), 'Datei wählen…')),
+    canDropFiles ? h('p', { class: 'small muted drop-hint' }, '…oder eine Backup-Datei (.json) einfach hierher ziehen.') : null);
+  wireFileDrop(importPanel);
   const how = h('section', { class: 'panel wide' },
     h('h2', { class: 'section' }, sym('help', 16), 'So geht’s: Handy → Laptop'),
     h('ol', { class: 'steps' },
       h('li', null, 'Auf dem Handy: hier auf „Teilen…“ tippen und den Code an dich selbst schicken (E-Mail, WhatsApp, AirDrop) – oder „Kopieren“ und in eine Notiz einfügen.'),
-      h('li', null, 'Auf dem Laptop: Blueprint öffnen → „Daten übertragen“ → den Code ins Feld „Importieren“ einfügen.'),
+      h('li', null, 'Auf dem Laptop: Blueprint öffnen → „Daten übertragen“ → den Code ins Feld „Importieren“ einfügen – oder die Backup-Datei mit „Datei wählen…“ laden bzw. hineinziehen.'),
       h('li', null, 'Auf „Importieren“ klicken. Hat der Laptop schon Daten, wählst du „Zusammenführen“ oder „Alles ersetzen“.')));
   root.append(h('div', { class: 'dash-grid' }, exportPanel, importPanel, how));
 }
@@ -2692,6 +2727,8 @@ function init() {
     render();
   });
   window.addEventListener('beforeunload', flushSave);
+  window.addEventListener('dragover', e => { if (hasFiles(e)) e.preventDefault(); });
+  window.addEventListener('drop', e => { if (hasFiles(e)) e.preventDefault(); });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushSave(); });
 
   render();
