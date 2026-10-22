@@ -347,6 +347,30 @@ table.mat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .tip .n { font-family: var(--font-px); color: var(--accent); font-size: 20px; }
 .tip p { margin: 6px 0 0; color: var(--text-2); }
 
+/* ===== Rezepte & Grundmaterialien ===== */
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.panel-head h2.section { margin: 0; }
+.base-block { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding: 10px 12px; border: 1px dashed var(--border-2); border-radius: var(--radius-sm); background: #15181d; }
+.base-head { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; }
+.base-result { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.base-block .base-result { margin-top: 0; }
+.base-block .mat-table { table-layout: fixed; font-size: 12.5px; }
+.base-block .mat-table th, .base-block .mat-table td { padding: 5px 6px; }
+.base-block .mat-table th { white-space: normal; letter-spacing: .02em; }
+.base-block .mat-table th:not(:first-child), .base-block .mat-table td:not(:first-child) { width: 64px; }
+.base-block .mat-table td:first-child { overflow-wrap: anywhere; }
+.card .mat-head, .card .mat-row { grid-template-columns: minmax(0, 1fr) 62px 62px 26px; }
+.card .mat-row-track { right: 32px; }
+.steps-box summary { cursor: pointer; color: var(--text-2); font-size: 13px; }
+.craft-steps { margin: 6px 0 0; padding-left: 22px; color: var(--text-2); font-size: 13px; }
+.craft-steps li { margin: 3px 0; }
+.warn-note { color: #ffbf55; font-size: 12px; display: flex; align-items: center; gap: 4px; }
+.calc-row { display: grid; grid-template-columns: minmax(0, 1fr) 110px; gap: 8px; }
+.calc-empty { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.ing-row { display: grid; grid-template-columns: minmax(0, 1fr) 90px 30px; gap: 6px; align-items: center; }
+.recipe-out { grid-template-columns: minmax(0, 1fr) 170px; }
+.dlg-foot .spacer { flex: 1; }
+
 /* ===== Daten übertragen ===== */
 .transfer-panel { display: flex; flex-direction: column; gap: 10px; }
 .transfer-panel h2.section { margin-bottom: 2px; }
@@ -701,7 +725,8 @@ function defaultState() {
     schemaVersion: SCHEMA_VERSION,
     settings: { accent: 'grass', lastBackupDate: null, backupDirName: null },
     projects: [],
-    tasks: []
+    tasks: [],
+    recipes: []
   };
 }
 function newProject() {
@@ -767,6 +792,7 @@ function normalize(raw) {
       deletedAt: t.deletedAt || null, deletedWithProject: !!t.deletedWithProject
     };
   });
+  s.recipes = normRecipes(raw.recipes);
   s.schemaVersion = SCHEMA_VERSION;
   return s;
 }
@@ -853,11 +879,98 @@ function projectMaterials(p) {
   for (const t of tasksOf(p.id)) mergeMaterials(rows, t.materials, t.title || '(ohne Titel)');
   return [...rows.values()].sort((a, b) => a.name.localeCompare(b.name, 'de'));
 }
+function listRows(list) {
+  const rows = new Map();
+  mergeMaterials(rows, list, '');
+  return [...rows.values()];
+}
 function rowsTotals(rows) {
   let need = 0, have = 0;
   for (const r of rows) { need += r.needed; have += Math.min(r.have, r.needed); }
   return { need, have };
 }
+
+/* ===== Rezepte & Grundmaterialien ===== */
+const STATIONS = [ { v: 'werkbank', label: 'Werkbank' }, { v: 'ofen', label: 'Ofen' }, { v: 'steinsaege', label: 'Steinsäge' }, { v: 'sonstiges', label: 'Sonstiges' } ];
+const nameKey = v => String(v || '').trim().toLowerCase();
+const liveRecipes = () => S().recipes.filter(r => !r.deletedAt);
+function newRecipe() {
+  const now = nowIso();
+  return { id: uid(), output: '', qty: 1, station: 'werkbank', inputs: [{ id: uid(), name: '', qty: 1 }], createdAt: now, updatedAt: now, deletedAt: null };
+}
+function normRecipes(list) {
+  return arr(list).filter(r => r && typeof r === 'object' && r.id).map(r => ({
+    id: str(r.id), output: str(r.output), qty: Math.max(1, numOrNull(r.qty) || 1),
+    station: STATIONS.some(x => x.v === r.station) ? r.station : 'werkbank',
+    inputs: arr(r.inputs).filter(i => i && typeof i === 'object').map(i => ({ id: str(i.id) || uid(), name: str(i.name), qty: Math.max(1, numOrNull(i.qty) || 1) })),
+    createdAt: r.createdAt || nowIso(), updatedAt: r.updatedAt || nowIso(), deletedAt: r.deletedAt || null
+  }));
+}
+function recipeIndex() {
+  const index = new Map();
+  for (const r of liveRecipes()) { const k = nameKey(r.output); if (k && !index.has(k)) index.set(k, r); }
+  return index;
+}
+/* Bedarf [{name, qty}] → Grundmaterialien, Bauplan und erkannte Kreisläufe.
+   Gleiche Zwischenprodukte werden erst zusammengezählt, dann in ganzen Herstellungen gerechnet. */
+function expandDemand(demand, index = recipeIndex()) {
+  const need = new Map(), names = new Map();
+  const add = (name, q) => {
+    const k = nameKey(name);
+    if (!k || !(q > 0)) return;
+    if (!names.has(k)) names.set(k, String(name).trim());
+    need.set(k, (need.get(k) || 0) + q);
+  };
+  demand.forEach(d => add(d.name, d.qty));
+  // Reihenfolge: Produkt vor Zutat (umgekehrte Post-Order der Tiefensuche).
+  // Führt eine Zutat zurück in den Kreis, wird das Item mit diesem Rezept als Grundmaterial gezählt.
+  const seen = new Map(), order = [], cyclic = new Set();
+  const visit = k => {
+    seen.set(k, 1);
+    const r = index.get(k);
+    if (r) for (const i of r.inputs) {
+      const ik = nameKey(i.name);
+      if (!ik) continue;
+      if (!names.has(ik)) names.set(ik, i.name.trim());
+      if (seen.get(ik) === 1) cyclic.add(k);
+      else if (!seen.has(ik)) visit(ik);
+    }
+    seen.set(k, 2);
+    order.push(k);
+  };
+  [...need.keys()].forEach(k => { if (!seen.has(k)) visit(k); });
+  const steps = [];
+  for (const k of order.reverse()) {
+    const q = need.get(k) || 0;
+    const r = index.get(k);
+    if (!(q > 0) || !r || cyclic.has(k)) continue;
+    const crafts = Math.ceil(q / r.qty);
+    steps.push({ recipe: r, crafts, produced: crafts * r.qty, leftover: crafts * r.qty - q });
+    need.delete(k);
+    for (const i of r.inputs) add(i.name, i.qty * crafts);
+  }
+  const base = [...need.entries()].filter(([, q]) => q > 0)
+    .map(([k, q]) => ({ key: k, name: names.get(k), qty: q, cyclic: cyclic.has(k) }))
+    .sort((a, b) => b.qty - a.qty || a.name.localeCompare(b.name, 'de'));
+  return { base, steps, cycles: [...cyclic].map(k => names.get(k)) };
+}
+/* Materialzeilen [{name, needed, have}] → Grundmaterialien mit „Gesamt“ und „Fehlt noch“ */
+function baseRows(rows, index = recipeIndex()) {
+  const total = expandDemand(rows.map(r => ({ name: r.name, qty: r.needed })), index);
+  const missing = expandDemand(rows.map(r => ({ name: r.name, qty: Math.max(0, r.needed - r.have) })), index);
+  const map = new Map();
+  for (const b of total.base) map.set(b.key, { key: b.key, name: b.name, total: b.qty, missing: 0, cyclic: b.cyclic });
+  for (const b of missing.base) {
+    if (!map.has(b.key)) map.set(b.key, { key: b.key, name: b.name, total: 0, missing: 0, cyclic: b.cyclic });
+    map.get(b.key).missing = b.qty;
+  }
+  return {
+    rows: [...map.values()].sort((a, b) => b.missing - a.missing || b.total - a.total || a.name.localeCompare(b.name, 'de')),
+    steps: missing.steps, anySteps: total.steps.length > 0,
+    cycles: [...new Set([...total.cycles, ...missing.cycles])]
+  };
+}
+const usesRecipes = (rows, index = recipeIndex()) => rows.some(r => index.has(nameKey(r.name)));
 
 /* ===== Koordinaten ===== */
 const isNum = v => typeof v === 'number' && Number.isFinite(v);
@@ -943,6 +1056,8 @@ const ui = {
   mdMode: {},
   exportCode: null,
   exportBusy: false,
+  calc: { name: '', qty: 64 },
+  stepsOpen: {},
   importText: '',
   importError: '',
   prefs: { details: {} }
@@ -1105,6 +1220,7 @@ function refreshLive() {
   $$('[data-bar]').forEach(fillBar);
   $$('[data-live="mat-summary"]').forEach(el => { const p = projectById(el.dataset.pid); if (p) el.replaceChildren(matSummaryTable(p)); });
   $$('[data-pct]').forEach(el => { const p = projectById(el.dataset.pct); if (p) el.textContent = projectPctText(p); });
+  $$('[data-live="base"]').forEach(el => { if (el._refresh) el._refresh(); });
 }
 
 /* ===== Routing ===== */
@@ -1114,6 +1230,7 @@ function parseRoute() {
   if (parts[0] === 'archiv') return { view: 'archive' };
   if (parts[0] === 'papierkorb') return { view: 'trash' };
   if (parts[0] === 'uebertragen') return { view: 'transfer' };
+  if (parts[0] === 'rezepte') return { view: 'recipes' };
   return { view: 'dashboard' };
 }
 const go = hash => { if (location.hash === hash) render(); else location.hash = hash; };
@@ -1253,6 +1370,8 @@ function renderSidebar() {
     h('div', { class: 'brand' }, iconEl('grass', 30), h('div', null, h('div', { class: 'brand-name' }, 'Blueprint'), h('div', { class: 'brand-sub' }, 'Bauprojekte planen'))),
     h('div', { class: 'side-scroll', 'data-skey': 'side' },
       h('a', { class: 'nav-item' + (r.view === 'dashboard' ? ' active' : ''), href: '#/' }, sym('grid'), 'Dashboard'),
+      h('a', { class: 'nav-item' + (r.view === 'recipes' ? ' active' : ''), href: '#/rezepte' }, iconEl('crafting', 16), 'Rezepte',
+        liveRecipes().length ? h('span', { class: 'count' }, liveRecipes().length) : null),
       h('div', { class: 'side-head' }, h('span', null, 'Projekte'),
         h('button', { class: 'icon-btn', title: 'Neues Projekt', 'data-fkey': 'new-project', onClick: () => openProjectModal(null) }, sym('plus'))),
       projNodes.length ? projNodes : h('div', { class: 'side-empty' }, 'Noch keine Projekte.')),
@@ -1278,6 +1397,7 @@ function renderDatalists() {
     t.materials.forEach(m => addTo(mats, m.name));
   }
   S().projects.forEach(p => p.materials.forEach(m => addTo(mats, m.name)));
+  liveRecipes().forEach(r => { addTo(mats, r.output); r.inputs.forEach(i => addTo(mats, i.name)); });
   const fill = (id, m) => $(id).replaceChildren(...[...m.values()].sort((a, b) => a.localeCompare(b, 'de')).map(v => h('option', { value: v })));
   fill('#dl-assignee', assignees); fill('#dl-tags', tags); fill('#dl-material', mats);
 }
@@ -1299,6 +1419,7 @@ function renderMain() {
   else if (view === 'archive') renderArchive(inner, menuBtn, banners);
   else if (view === 'trash') renderTrash(inner, menuBtn, banners);
   else if (view === 'transfer') renderTransfer(inner, menuBtn, banners);
+  else if (view === 'recipes') renderRecipes(inner, menuBtn, banners);
   else renderDashboard(inner, menuBtn, banners);
   main.replaceChildren(inner);
   document.title = view === 'project' ? `${p.name || 'Projekt'} – Blueprint` : 'Blueprint';
@@ -1349,9 +1470,29 @@ function renderDashboard(root, menuBtn, banners) {
     }
   }
   const missing = [...all.values()].filter(m => m.needed > m.have).sort((a, b) => (b.needed - b.have) - (a.needed - a.have));
+  const baseView = ui.prefs.matView === 'base';
+  let baseMissing = [];
+  if (baseView) {
+    const index = recipeIndex(), merged = new Map();
+    for (const p of projects) {
+      for (const b of baseRows(projectMaterials(p), index).rows) {
+        if (!b.missing) continue;
+        if (!merged.has(b.key)) merged.set(b.key, { name: b.name, missing: 0, total: 0, projects: [] });
+        const m = merged.get(b.key);
+        m.missing += b.missing; m.total += b.total; m.projects.push(p);
+      }
+    }
+    baseMissing = [...merged.values()].sort((a, b) => b.missing - a.missing || a.name.localeCompare(b.name, 'de'));
+  }
+  const projChips = list => h('div', { class: 'tags' }, list.map(p => h('a', { class: 'tag small', href: `#/p/${encodeURIComponent(p.id)}`, style: { 'text-decoration': 'none' } }, p.name)));
   const matPanel = h('section', { class: 'panel' },
-    h('h2', { class: 'section' }, sym('box', 16), 'Fehlendes Material'),
-    missing.length ? h('table', { class: 'mat-table' },
+    h('div', { class: 'panel-head' }, h('h2', { class: 'section' }, sym('box', 16), 'Fehlendes Material'), matViewToggle('dash')),
+    baseView ? (baseMissing.length ? h('table', { class: 'mat-table' },
+      h('thead', null, h('tr', null, h('th', null, 'Grundmaterial'), h('th', { class: 'num' }, 'Fehlt noch'), h('th', { class: 'num' }, 'Gesamt'), h('th', null, 'Projekte'))),
+      h('tbody', null, baseMissing.map(m => h('tr', null,
+        h('td', null, m.name), h('td', { class: 'num miss' }, fmtNum(m.missing)), h('td', { class: 'num muted' }, fmtNum(m.total)), h('td', null, projChips(m.projects))))))
+      : h('div', { class: 'empty' }, 'Alles gesammelt – oder noch kein Material eingetragen.'))
+    : missing.length ? h('table', { class: 'mat-table' },
       h('thead', null, h('tr', null, h('th', null, 'Material'), h('th', { class: 'num' }, 'Fehlt'), h('th', { class: 'num' }, 'Gesammelt'), h('th', null, 'Projekte'))),
       h('tbody', null, missing.map(m => h('tr', null,
         h('td', null, m.name),
@@ -1447,10 +1588,19 @@ function renderProjectView(root, p, menuBtn, banners) {
 
   root.append(renderBoard(p));
 }
+function matViewToggle(key) {
+  return segmented([{ v: 'raw', label: 'Wie eingetragen' }, { v: 'base', label: 'Grundmaterialien' }], ui.prefs.matView === 'base' ? 'base' : 'raw',
+    v => { ui.prefs.matView = v; savePrefs(); render(); }, `matview-${key}`);
+}
 function matSummaryTable(p) {
   const rows = projectMaterials(p);
   if (!rows.length) return h('p', { class: 'muted' }, 'Noch kein Material eingetragen.');
-  return h('table', { class: 'mat-table' },
+  if (ui.prefs.matView === 'base') {
+    return h('div', null, matViewToggle(`p-${p.id}`),
+      liveRecipes().length ? null : h('p', { class: 'muted small', style: { margin: '8px 0 0' } }, 'Noch keine Rezepte – ohne Rezept zählt alles als Grundmaterial. ', h('a', { href: '#/rezepte' }, 'Rezepte anlegen')),
+      baseResult(baseRows(rows), `proj-${p.id}`));
+  }
+  return h('div', null, matViewToggle(`p-${p.id}`), h('table', { class: 'mat-table' },
     h('thead', null, h('tr', null, h('th', null, 'Material'), h('th', { class: 'num' }, 'Benötigt'), h('th', { class: 'num' }, 'Gesammelt'), h('th', { class: 'num' }, 'Fehlt'), h('th', { class: 'mini' }))),
     h('tbody', null, rows.map(r => {
       const miss = Math.max(0, r.needed - r.have);
@@ -1461,7 +1611,48 @@ function matSummaryTable(p) {
         h('td', { class: 'num' }, fmtNum(r.have)),
         h('td', { class: 'num ' + (miss ? 'miss' : 'okv') }, miss ? fmtNum(miss) : '✓'),
         h('td', { class: 'mini' }, h('div', { class: 'bar-track' }, h('div', { class: 'bar-fill', style: { width: `${Math.round(pct * 100)}%` } }))));
-    })));
+    }))));
+}
+/* Tabelle „Grundmaterial | Gesamt | Fehlt noch“ + Bauplan */
+function stepText(st) {
+  const r = st.recipe;
+  return `${fmtNum(st.crafts)}× ${label(STATIONS, r.station)}: ` + r.inputs.map(i => `${fmtNum(i.qty * st.crafts)} ${i.name}`).join(' + ') +
+    ` → ${fmtNum(st.produced)} ${r.output}` + (st.leftover ? ` (${fmtNum(st.leftover)} übrig)` : '');
+}
+function stepsList(steps, key, title) {
+  const open = !!ui.stepsOpen[key];
+  return h('details', { class: 'steps-box', open, onToggle: e => { ui.stepsOpen[key] = e.target.open; } },
+    h('summary', null, `${title} · ${steps.length} Schritt${steps.length === 1 ? '' : 'e'}`),
+    h('ol', { class: 'craft-steps' }, steps.map(st => h('li', null, stepText(st)))));
+}
+function cycleNote(cycles) {
+  return cycles.length ? h('div', { class: 'warn-note' }, sym('alert', 12), ` Kreislauf bei ${cycles.join(', ')} – wird als Grundmaterial gezählt.`) : null;
+}
+function baseResult(res, key) {
+  if (!res.rows.length) return h('p', { class: 'muted' }, 'Kein Bedarf.');
+  return h('div', { class: 'base-result' },
+    h('table', { class: 'mat-table' },
+      h('thead', null, h('tr', null, h('th', null, 'Grundmaterial'), h('th', { class: 'num' }, 'Gesamt'), h('th', { class: 'num' }, 'Fehlt noch'))),
+      h('tbody', null, res.rows.map(b => h('tr', null,
+        h('td', null, b.name, b.cyclic ? h('span', { class: 'muted', title: 'Kreislauf im Rezept' }, ' ⟳') : null),
+        h('td', { class: 'num' }, fmtNum(b.total)),
+        h('td', { class: 'num ' + (b.missing ? 'miss' : 'okv') }, b.missing ? fmtNum(b.missing) : '✓'))))),
+    cycleNote(res.cycles),
+    res.steps.length ? stepsList(res.steps, key, 'Bauplan (noch herzustellen)')
+      : (res.anySteps ? h('div', { class: 'small muted' }, 'Alles gesammelt – nichts mehr herzustellen.') : null));
+}
+/* Live-Block unter einer Materialliste: erscheint nur, wenn ein Material ein Rezept hat */
+function baseBlock(list, key) {
+  const el = h('div', { dataset: { live: 'base' } });
+  el._refresh = () => {
+    const rows = listRows(list);
+    const index = recipeIndex();
+    if (!usesRecipes(rows, index)) { el.className = ''; el.replaceChildren(); return; }
+    el.className = 'base-block';
+    el.replaceChildren(h('div', { class: 'base-head' }, iconEl('crafting', 14), 'Grundmaterialien (aus Rezepten)'), baseResult(baseRows(rows, index), key));
+  };
+  el._refresh();
+  return el;
 }
 
 function passesFilter(t) {
@@ -1624,7 +1815,7 @@ function taskEditorFields(t, ctx) {
     field('Koordinaten', locationEditor(t, ctx)),
     field('Beschreibung', markdownEditor(t, ctx)),
     field('Checkliste', checklistEditor(t, ctx)),
-    field('Material', materialsEditor(t.materials, ctx), 'box'),
+    field('Material', [materialsEditor(t.materials, ctx), baseBlock(t.materials, `${ctx.key}-base`)], 'box'),
     field('Tags', tagsEditor(t, ctx)),
     field('Bild-Links', linksEditor(t, ctx), 'link')
   ];
@@ -1857,7 +2048,9 @@ function purgeTrash() {
   S().projects = S().projects.filter(p => !goneProjects.has(p.id));
   S().tasks = S().tasks.filter(t => !goneProjects.has(t.projectId) && !old(t.deletedAt));
   const removed = before - S().projects.length - S().tasks.length;
-  if (removed) store.save();
+  const recipesBefore = S().recipes.length;
+  S().recipes = S().recipes.filter(r => !old(r.deletedAt));
+  if (removed || S().recipes.length !== recipesBefore) store.save();
   return removed;
 }
 
@@ -1949,7 +2142,7 @@ function dlgShell(title, body, foot) {
 function openTaskModal(p) {
   const draft = newTask(p.id, 'offen');
   let error = '';
-  const ctx = { key: 'm-task', changed() {}, rerender() { modal.rerender(); } };
+  const ctx = { key: 'm-task', changed() { scheduleRefresh(); }, rerender() { modal.rerender(); } };
   const submit = () => {
     if (!draft.title.trim()) { error = 'Bitte einen Titel eingeben.'; ui.pendingFocus = 'm-task-title'; modal.rerender(); return; }
     const col = columnTasks(p.id, draft.column);
@@ -2073,6 +2266,10 @@ function openHelp() {
       'Beim Öffnen erscheint ein Hinweis, wenn etwas fällig ist. Die Liste steht auf dem Dashboard.']),
     sec('Papierkorb & Archiv', [`Gelöschtes landet im Papierkorb und wird nach ${TRASH_DAYS} Tagen endgültig entfernt.`,
       'Erledigte Aufgaben bleiben in „Fertig“, bis du sie archivierst.']),
+    sec('Rezepte & Grundmaterialien', ['Unter „Rezepte“ trägst du ein, woraus etwas hergestellt wird, z. B. „4× Steinziegel ← 4× Stein (Werkbank)“.',
+      'Blueprint rechnet Materiallisten dann über alle Stufen in Grundmaterialien um – in der Aufgabe, im Projekt-Gesamtbedarf und im Dashboard (Umschalter „Grundmaterialien“).',
+      'Gerechnet wird in ganzen Herstellungen; gleiche Zwischenprodukte werden vorher zusammengezählt. „Fehlt noch“ nutzt „Benötigt − Gesammelt“.',
+      'Der Rechner im Rezeptbuch rechnet jede Menge aus, ohne dass du eine Aufgabe anlegen musst.']),
     sec('Daten übertragen (z. B. Handy → Laptop)', ['Auf dem alten Gerät: „Daten übertragen“ → „Teilen…“ oder „Kopieren“ und den Code an dich selbst schicken (E-Mail, WhatsApp, AirDrop, Notiz).',
       'Auf dem neuen Gerät: „Daten übertragen“ → Code ins Feld „Importieren“ einfügen → „Importieren“.',
       'Hat das Gerät schon Daten: „Zusammenführen“ ergänzt Neues und übernimmt bei gleichen Einträgen die zuletzt geänderte Version. „Alles ersetzen“ übernimmt exakt den Stand des Codes.']),
@@ -2109,8 +2306,8 @@ const kv = {
 const BACKUP_RE = /^blueprint-backup-\d{4}-\d{2}-\d{2}\.json$/;
 function exportData() {
   flushSave();
-  const { projects, tasks, settings } = S();
-  return { app: 'blueprint', schemaVersion: SCHEMA_VERSION, exportedAt: nowIso(), data: { settings: { accent: settings.accent }, projects, tasks } };
+  const { projects, tasks, recipes, settings } = S();
+  return { app: 'blueprint', schemaVersion: SCHEMA_VERSION, exportedAt: nowIso(), data: { settings: { accent: settings.accent }, projects, tasks, recipes } };
 }
 function markBackup() { S().settings.lastBackupDate = todayStr(); store.save(); }
 async function chooseBackupDir() {
@@ -2166,7 +2363,8 @@ function downloadBackup() {
   hideBanner('backup');
   render();
 }
-const hasData = () => S().projects.length > 0 || S().tasks.length > 0;
+const hasData = () => S().projects.length > 0 || S().tasks.length > 0 || S().recipes.length > 0;
+const recipeCountText = n => n ? ` sowie ${n} Rezept(e)` : '';
 async function dailyBackupCheck() {
   if (S().settings.lastBackupDate === todayStr() || !hasData()) return;
   if (!fsSupported()) {
@@ -2244,7 +2442,7 @@ function unwrapPayload(obj) {
 function mergeState(local, incoming) {
   const count = { added: 0, updated: 0, same: 0 };
   const time = x => Date.parse(x.updatedAt) || 0;
-  for (const key of ['projects', 'tasks']) {
+  for (const key of ['projects', 'tasks', 'recipes']) {
     const index = new Map(local[key].map((x, i) => [x.id, i]));
     for (const item of incoming[key]) {
       const i = index.get(item.id);
@@ -2258,13 +2456,13 @@ function mergeState(local, incoming) {
 async function importPayload(data, { kind, exportedAt }) {
   const incoming = normalize(data);
   const when = exportedAt ? ` vom ${new Date(exportedAt).toLocaleString('de-DE')}` : '';
-  const what = `${kind}${when} mit ${incoming.projects.length} Projekt(en) und ${incoming.tasks.length} Aufgabe(n)`;
+  const what = `${kind}${when} mit ${incoming.projects.length} Projekt(en) und ${incoming.tasks.length} Aufgabe(n)${recipeCountText(incoming.recipes.length)}`;
   let mode;
   if (!hasData()) {
     mode = (await confirmDialog(`${what} übernehmen?`, { title: `${kind} laden`, ok: 'Übernehmen' })) ? 'replace' : null;
   } else {
     mode = await choiceDialog([
-      `${what} laden. Auf diesem Gerät sind schon ${S().projects.length} Projekt(e) und ${S().tasks.length} Aufgabe(n).`,
+      `${what} laden. Auf diesem Gerät sind schon ${S().projects.length} Projekt(e) und ${S().tasks.length} Aufgabe(n)${recipeCountText(S().recipes.length)}.`,
       '„Zusammenführen“ ergänzt Neues und übernimmt bei gleichen Einträgen die zuletzt geänderte Version. „Alles ersetzen“ überschreibt den Stand auf diesem Gerät.'
     ], { title: `${kind} laden`, choices: [{ v: 'replace', label: 'Alles ersetzen', cls: 'danger-solid' }, { v: 'merge', label: 'Zusammenführen', cls: 'primary', autofocus: true }] });
   }
@@ -2323,7 +2521,7 @@ function renderTransfer(root, menuBtn, banners) {
   const exportPanel = h('section', { class: 'panel transfer-panel' },
     h('h2', { class: 'section' }, sym('upload', 16), '1 · Exportieren'),
     h('p', { class: 'muted' }, 'Auf dem Gerät, auf dem deine Daten sind.'),
-    h('p', null, hasData() ? `Enthält ${S().projects.length} Projekt(e) und ${S().tasks.length} Aufgabe(n), inklusive Archiv und Papierkorb.` : 'Auf diesem Gerät sind noch keine Daten.'),
+    h('p', null, hasData() ? `Enthält ${S().projects.length} Projekt(e) und ${S().tasks.length} Aufgabe(n)${recipeCountText(S().recipes.length)}, inklusive Archiv und Papierkorb.` : 'Auf diesem Gerät sind noch keine Daten.'),
     h('textarea', { class: 'input code-box', readonly: true, rows: 5, 'data-fkey': 'transfer-export', value: code || '', placeholder: code == null ? 'Code wird erstellt …' : '',
       onFocus: e => e.target.select() }),
     code ? h('div', { class: 'small muted' }, `${fmtNum(code.length)} Zeichen`) : null,
@@ -2345,6 +2543,117 @@ function renderTransfer(root, menuBtn, banners) {
       h('li', null, 'Auf dem Laptop: Blueprint öffnen → „Daten übertragen“ → den Code ins Feld „Importieren“ einfügen.'),
       h('li', null, 'Auf „Importieren“ klicken. Hat der Laptop schon Daten, wählst du „Zusammenführen“ oder „Alles ersetzen“.')));
   root.append(h('div', { class: 'dash-grid' }, exportPanel, importPanel, how));
+}
+
+/* ===== Rezeptbuch ===== */
+function calcResult() {
+  const name = ui.calc.name.trim();
+  const qty = Math.max(0, Number(ui.calc.qty) || 0);
+  if (!name || !qty) return h('p', { class: 'muted' }, 'Item und Menge eingeben.');
+  const index = recipeIndex();
+  if (!index.has(nameKey(name))) {
+    return h('div', { class: 'calc-empty' }, h('p', { class: 'muted' }, `„${name}“ hat kein Rezept – es zählt selbst als Grundmaterial.`),
+      h('button', { class: 'btn small', onClick: () => openRecipeModal(null, name) }, sym('plus', 14), `Rezept für „${name}“ anlegen`));
+  }
+  const res = expandDemand([{ name, qty }], index);
+  return h('div', { class: 'base-result' },
+    h('table', { class: 'mat-table' },
+      h('thead', null, h('tr', null, h('th', null, 'Grundmaterial'), h('th', { class: 'num' }, 'Menge'))),
+      h('tbody', null, res.base.map(b => h('tr', null, h('td', null, b.name, b.cyclic ? h('span', { class: 'muted', title: 'Kreislauf im Rezept' }, ' ⟳') : null), h('td', { class: 'num' }, fmtNum(b.qty)))))),
+    cycleNote(res.cycles),
+    h('div', { class: 'panel-title', style: { margin: '6px 0 0' } }, 'Bauplan'),
+    h('ol', { class: 'craft-steps' }, res.steps.map(st => h('li', null, stepText(st)))));
+}
+function renderRecipes(root, menuBtn, banners) {
+  const list = liveRecipes().sort((a, b) => a.output.localeCompare(b.output, 'de'));
+  root.append(h('header', { class: 'view-head' }, menuBtn,
+    h('div', { class: 'head-text' }, h('h1', null, 'Rezepte'),
+      h('div', { class: 'muted' }, 'Trage ein, woraus etwas hergestellt wird – Blueprint rechnet Materiallisten dann in Grundmaterialien um.')),
+    h('div', { class: 'head-actions' }, h('button', { class: 'btn primary', 'data-fkey': 'recipe-new', onClick: () => openRecipeModal(null) }, sym('plus'), 'Neues Rezept'))), banners);
+
+  const result = h('div', { class: 'calc-result' }, calcResult());
+  const upd = () => result.replaceChildren(calcResult());
+  const calcPanel = h('section', { class: 'panel transfer-panel' },
+    h('h2', { class: 'section' }, iconEl('crafting', 16), 'Rechner'),
+    h('div', { class: 'calc-row' },
+      h('input', { class: 'input', placeholder: 'Item, z. B. Steinziegeltreppe', list: 'dl-material', autocomplete: 'off', value: ui.calc.name, 'data-fkey': 'calc-name',
+        onInput: e => { ui.calc.name = e.target.value; upd(); } }),
+      h('input', { class: 'input', type: 'number', min: '1', step: '1', inputmode: 'numeric', placeholder: 'Menge', value: String(ui.calc.qty || ''), 'data-fkey': 'calc-qty',
+        onInput: e => { ui.calc.qty = Math.max(0, numOrNull(e.target.value) || 0); upd(); } })),
+    result);
+
+  const listPanel = h('section', { class: 'panel transfer-panel' },
+    h('h2', { class: 'section' }, sym('text', 16), `Rezeptbuch (${list.length})`),
+    list.length ? h('div', { class: 'list-panel' }, list.map(r => h('div', { class: 'list-row recipe-row' },
+      h('div', { class: 'info' },
+        h('span', { class: 'ttl' }, `${fmtNum(r.qty)}× ${r.output || '(ohne Namen)'}`),
+        h('span', { class: 'sub' }, '← ' + r.inputs.map(i => `${fmtNum(i.qty)}× ${i.name}`).join(' + ') + ` · ${label(STATIONS, r.station)}`)),
+      h('div', { class: 'acts' },
+        h('button', { class: 'btn small', 'data-fkey': `recipe-edit-${r.id}`, onClick: () => openRecipeModal(r) }, sym('edit', 14), 'Bearbeiten'),
+        h('button', { class: 'btn small ghost danger', 'data-fkey': `recipe-del-${r.id}`, onClick: () => deleteRecipe(r) }, sym('trash', 14), 'Löschen')))))
+      : h('div', { class: 'empty' }, 'Noch keine Rezepte. Beispiel: „4× Steinziegel ← 4× Stein (Werkbank)“ und „1× Stein ← 1× Bruchstein (Ofen)“.'));
+  root.append(h('div', { class: 'dash-grid' }, calcPanel, listPanel));
+}
+function deleteRecipe(r) {
+  r.deletedAt = nowIso();
+  touch(r);
+  commit();
+  toast(`Rezept „${r.output}“ gelöscht.`, { action: { label: 'Rückgängig', fn: () => { r.deletedAt = null; touch(r); commit(); } } });
+}
+function openRecipeModal(r, presetOutput) {
+  const isNew = !r;
+  const draft = isNew ? newRecipe() : JSON.parse(JSON.stringify(r));
+  if (presetOutput) draft.output = presetOutput;
+  if (!draft.inputs.length) draft.inputs.push({ id: uid(), name: '', qty: 1 });
+  let error = '';
+  const submit = () => {
+    const output = draft.output.trim();
+    const k = nameKey(output);
+    const merged = new Map();
+    for (const i of draft.inputs) {
+      const ik = nameKey(i.name);
+      if (!ik) continue;
+      if (merged.has(ik)) merged.get(ik).qty += i.qty; else merged.set(ik, { id: i.id, name: i.name.trim(), qty: Math.max(1, i.qty || 1) });
+    }
+    const inputs = [...merged.values()];
+    if (!k) error = 'Bitte angeben, was hergestellt wird.';
+    else if (!inputs.length) error = 'Bitte mindestens eine Zutat eintragen.';
+    else if (merged.has(k)) error = 'Eine Zutat darf nicht das Ergebnis selbst sein.';
+    else if (liveRecipes().some(x => x.id !== draft.id && nameKey(x.output) === k)) error = `Für „${output}“ gibt es schon ein Rezept. Bearbeite bitte das vorhandene.`;
+    else error = '';
+    if (error) { modal.rerender(); return; }
+    const fields = { output, qty: Math.max(1, draft.qty || 1), station: draft.station, inputs };
+    if (isNew) S().recipes.push({ ...draft, ...fields, createdAt: nowIso(), updatedAt: nowIso() });
+    else { Object.assign(r, fields); touch(r); }
+    modal.close();
+    commit();
+    toast(isNew ? `Rezept „${output}“ gespeichert.` : `Rezept „${output}“ aktualisiert.`);
+  };
+  ui.pendingFocus = 'm-rec-out';
+  modal.open(() => dlgShell(isNew ? 'Neues Rezept' : 'Rezept bearbeiten', [
+    h('div', { class: 'grid2 recipe-out' },
+      field('Ergebnis', h('input', { class: 'input title-input', value: draft.output, placeholder: 'z. B. Steinziegel', list: 'dl-material', autocomplete: 'off', 'data-fkey': 'm-rec-out',
+        onInput: e => { draft.output = e.target.value; } })),
+      field('Menge pro Herstellung', h('input', { class: 'input', type: 'number', min: '1', step: '1', inputmode: 'numeric', value: String(draft.qty), 'data-fkey': 'm-rec-qty',
+        onInput: e => { draft.qty = Math.max(1, numOrNull(e.target.value) || 1); } }))),
+    field('Station', segmented(STATIONS, draft.station, v => { draft.station = v; modal.rerender(); }, 'm-rec-st')),
+    field('Zutaten pro Herstellung', h('div', { class: 'mat-editor' },
+      draft.inputs.map((i, idx) => h('div', { class: 'ing-row' },
+        h('input', { class: 'input', value: i.name, placeholder: 'z. B. Stein', list: 'dl-material', autocomplete: 'off', 'data-fkey': `m-rec-in-${i.id}-name`,
+          onInput: e => { i.name = e.target.value; } }),
+        h('input', { class: 'input', type: 'number', min: '1', step: '1', inputmode: 'numeric', value: String(i.qty), 'data-fkey': `m-rec-in-${i.id}-qty`,
+          onInput: e => { i.qty = Math.max(1, numOrNull(e.target.value) || 1); } }),
+        h('button', { class: 'icon-btn danger-hover', title: 'Zutat entfernen', onClick: () => { draft.inputs.splice(idx, 1); if (!draft.inputs.length) draft.inputs.push({ id: uid(), name: '', qty: 1 }); modal.rerender(); } }, sym('x', 14)))),
+      h('div', null, h('button', { type: 'button', class: 'btn ghost small', 'data-fkey': 'm-rec-add',
+        onClick: () => { const i = { id: uid(), name: '', qty: 1 }; draft.inputs.push(i); ui.pendingFocus = `m-rec-in-${i.id}-name`; modal.rerender(); } }, sym('plus', 14), 'Zutat hinzufügen')))),
+    h('p', { class: 'small muted' }, 'Beispiel Treppe: Ergebnis „Steinziegeltreppe“, Menge 4, Zutat 6× „Steinziegel“. Namen ohne Rezept zählen als Grundmaterial.'),
+    error ? h('div', { class: 'err' }, error) : null
+  ], [
+    isNew ? null : h('button', { class: 'btn ghost danger', onClick: () => { modal.close(); deleteRecipe(r); } }, sym('trash', 15), 'Löschen'),
+    h('span', { class: 'spacer' }),
+    h('button', { class: 'btn ghost', onClick: () => modal.close() }, 'Abbrechen'),
+    h('button', { class: 'btn primary', 'data-fkey': 'm-rec-save', onClick: submit }, 'Speichern')
+  ]));
 }
 
 /* ===== Start ===== */

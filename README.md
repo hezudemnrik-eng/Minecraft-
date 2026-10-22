@@ -30,6 +30,23 @@ Manchmal fragt der Browser beim Start erneut nach der Erlaubnis. Dann erscheint 
 
 Unten links in der Seitenleiste steht, wann das letzte Backup war.
 
+## Rezepte & Grundmaterialien
+
+Unter **„Rezepte“** trägst du ein, woraus etwas hergestellt wird, zum Beispiel:
+
+| Ergebnis | Menge | Zutaten | Station |
+|---|---|---|---|
+| Steinziegeltreppe | 4 | 6× Steinziegel | Werkbank |
+| Steinziegel | 4 | 4× Stein | Werkbank |
+| Stein | 1 | 1× Bruchstein | Ofen |
+
+Steht dann in einer Materialliste „10 Steinziegeltreppe“, rechnet Blueprint über alle Stufen bis zum Rohstoff: **20 Bruchstein**. Dazu kommt ein Bauplan mit allen Zwischenschritten.
+
+- Zu sehen in der **aufgeklappten Aufgabe**, im **Projekt-Gesamtbedarf** und im **Dashboard** (Umschalter „Grundmaterialien“), außerdem im **Rechner** im Rezeptbuch.
+- **Gesamt** rechnet mit „Benötigt“, **Fehlt noch** mit „Benötigt − Gesammelt“.
+- Gerechnet wird in ganzen Herstellungen (10 Treppen → 3× herstellen = 12, 2 übrig). Gleiche Zwischenprodukte werden vorher zusammengezählt.
+- Alles ohne Rezept zählt als Grundmaterial. Pro Ergebnis gibt es ein Rezept.
+
 ## Daten übertragen (z. B. Handy → Laptop)
 
 Ohne Dateien, per Code zum Kopieren und Einfügen:
@@ -59,6 +76,7 @@ So ziehst du auch auf einen neuen PC oder einen anderen Browser um: Datei kopier
 - **Material** pro Aufgabe und pro Projekt. Die Projekt-Summe fasst gleiche Namen zusammen, Fortschrittsbalken zeigen, was noch fehlt.
 - **Dashboard** mit „Bald fällig & überfällig“, fehlendem Material über alle Projekte und dem Fortschritt jedes Projekts
 - **Filter** nach Priorität, Dimension, Zuständigem und „nur überfällig“
+- **Rezepte** mit Rechner: Materiallisten werden über alle Stufen in Grundmaterialien umgerechnet
 - **Daten übertragen** zwischen Geräten per Code (Kopieren/Teilen → Einfügen), wahlweise zusammenführen oder ersetzen
 - **Archiv** für fertige Projekte und erledigte Aufgaben, **Papierkorb** mit Wiederherstellen (leert sich nach 7 Tagen)
 - **Akzentfarbe** wählbar: Gras-Grün, Diamant-Türkis, Redstone-Rot, Gold
