@@ -42,7 +42,7 @@ Unter **„Rezepte“** trägst du ein, woraus etwas hergestellt wird, zum Beisp
 
 Steht dann in einer Materialliste „10 Steinziegeltreppe“, rechnet Blueprint über alle Stufen bis zum Rohstoff: **20 Bruchstein**. Dazu kommt ein Bauplan mit allen Zwischenschritten.
 
-- Zu sehen in der **aufgeklappten Aufgabe**, im **Projekt-Gesamtbedarf** und im **Dashboard** (Umschalter „Grundmaterialien“), außerdem im **Rechner** im Rezeptbuch.
+- Zu sehen in der **aufgeklappten Aufgabe**, im **Projekt-Gesamtbedarf** und in der **Übersicht** (Umschalter „Grundmaterialien“), außerdem im **Rechner** im Rezeptbuch.
 - **Gesamt** rechnet mit „Benötigt“, **Fehlt noch** mit „Benötigt − Gesammelt“.
 - Gerechnet wird in ganzen Herstellungen (10 Treppen → 3× herstellen = 12, 2 übrig). Gleiche Zwischenprodukte werden vorher zusammengezählt.
 - Alles ohne Rezept zählt als Grundmaterial. Pro Ergebnis gibt es ein Rezept.
@@ -70,13 +70,13 @@ So ziehst du auch auf einen neuen PC oder einen anderen Browser um: Datei kopier
 
 ## Was die App kann
 
-- **Projekte** mit Pixel-Icon, Farbe, Status (Planung / Im Bau / Pausiert / Fertig), Deadline, Koordinaten und Beschreibung (Markdown)
+- **Projekte** mit Pixel-Icon, Farbe, Status (Planung / Im Bau / Pausiert / Fertig), Koordinaten und Beschreibung (Markdown)
 - **Kanban-Board** pro Projekt: Offen → In Arbeit → Fertig, Karten per Drag & Drop verschieben und sortieren
-- **Aufgaben** mit Priorität (Niedrig / Mittel / Hoch / Dringend), Deadline, Zuständigem, Koordinaten, Checkliste, Materialliste, Tags und Bild-Links
+- **Aufgaben** mit Priorität (Niedrig / Mittel / Hoch / Dringend), Zuständigem, Koordinaten, Checkliste, Materialliste, Tags und Bild-Links
 - **Koordinaten** als Punkt oder Bereich (Ecke A/B) in Overworld, Nether oder End. Ein Klick kopiert die Zahlen, die Umrechnung zwischen Overworld und Nether wird automatisch angezeigt.
 - **Material** pro Aufgabe und pro Projekt. Die Projekt-Summe fasst gleiche Namen zusammen, Fortschrittsbalken zeigen, was noch fehlt.
-- **Dashboard** mit „Bald fällig & überfällig“, fehlendem Material über alle Projekte und dem Fortschritt jedes Projekts
-- **Filter** nach Priorität, Dimension, Zuständigem und „nur überfällig“
+- **Übersicht** für den PC: Kennzahlen, alle Projekte als Tabelle mit Aufgaben-Stand und ihren **Materialien (gesammelt / benötigt)**, dazu „In Arbeit“ und fehlendes Material über alle Projekte
+- **Filter** nach Priorität, Dimension und Zuständigem
 - **Rezepte** mit Rechner: Materiallisten werden über alle Stufen in Grundmaterialien umgerechnet
 - **Daten übertragen** zwischen Geräten per Code (Kopieren/Teilen → Einfügen), wahlweise zusammenführen oder ersetzen
 - **Archiv** für fertige Projekte und erledigte Aufgaben, **Papierkorb** mit Wiederherstellen (leert sich nach 7 Tagen)
