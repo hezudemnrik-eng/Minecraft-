@@ -69,6 +69,9 @@ a { color: var(--accent-strong); }
 
 /* ===== Seitenleiste ===== */
 .brand { display: flex; align-items: center; gap: 12px; padding: 20px 18px 16px; }
+.hub-link { display: inline-flex; align-items: center; gap: 6px; margin: 12px 18px 0; font-size: 12px; color: var(--text-3); text-decoration: none; }
+.hub-link:hover { color: var(--text); }
+.hub-link + .brand { padding-top: 10px; }
 .brand-name { font-family: var(--font-px); font-size: 22px; line-height: 1; letter-spacing: .04em; }
 .brand-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
 .side-scroll { flex: 1; overflow: auto; padding: 4px 10px 12px; min-height: 0; }
@@ -500,6 +503,7 @@ dialog.narrow { width: min(460px, calc(100vw - 32px)); }
 
 const APP_VERSION = '1.0.0';
 const SCHEMA_VERSION = 1;
+const HUB_URL = 'https://hezudemnrik-eng.github.io/Uebersicht/';
 const STORAGE_KEY = 'blueprint:v1';
 const UI_KEY = 'blueprint:ui';
 const TRASH_DAYS = 7;
@@ -1186,7 +1190,8 @@ function choiceDialog(text, { title, choices }) {
     const dlg = $('#confirm');
     let settled = false;
     const done = v => { if (settled) return; settled = true; dlg.close(); resolve(v); };
-    dlg.onclose = () => done(null);
+    // Ein verspätetes close-Event vom vorigen Dialog darf den neuen nicht schließen
+    dlg.onclose = () => { if (!dlg.open) done(null); };
     dlg.replaceChildren(h('div', { class: 'dlg' },
       h('div', { class: 'dlg-head' }, h('h2', null, title)),
       h('div', { class: 'dlg-body' }, [].concat(text).map(t => h('p', null, t))),
@@ -1413,6 +1418,7 @@ function renderSidebar() {
   const s = S().settings;
   const backupOk = s.lastBackupDate === todayStr();
   sb.replaceChildren(
+    h('a', { class: 'hub-link', href: HUB_URL, title: 'Zum App-Hub mit allen Web-Apps' }, '← Alle Apps'),
     h('div', { class: 'brand' }, iconEl('grass', 30), h('div', null, h('div', { class: 'brand-name' }, 'Blueprint'), h('div', { class: 'brand-sub' }, 'Bauprojekte planen'))),
     h('div', { class: 'side-scroll', 'data-skey': 'side' },
       h('a', { class: 'nav-item' + (r.view === 'dashboard' ? ' active' : ''), href: '#/' }, sym('grid'), 'Übersicht'),
@@ -2824,7 +2830,7 @@ function init() {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && ui.expandedTaskId && !$('#modal').open && !$('#confirm').open) collapseTask();
   });
-  $('#modal').addEventListener('close', () => { modal.build = null; });
+  $('#modal').addEventListener('close', () => { if (!$('#modal').open) modal.build = null; });
   $('#scrim').addEventListener('click', () => document.body.classList.remove('side-open'));
   // Änderungen aus einem anderen Tab übernehmen
   window.addEventListener('storage', e => {
