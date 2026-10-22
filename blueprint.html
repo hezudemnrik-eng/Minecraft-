@@ -153,10 +153,6 @@ h2.section { font-family: var(--font-px); font-weight: 400; font-size: 16px; mar
 .prio.p2 { color: var(--p2); background: color-mix(in srgb, var(--p2) 14%, transparent); }
 .prio.p3 { color: var(--p3); background: color-mix(in srgb, var(--p3) 14%, transparent); }
 .prio.p4 { color: var(--p4); background: color-mix(in srgb, var(--p4) 16%, transparent); }
-.due { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 2px 8px; border-radius: 4px; background: var(--surface-3); color: var(--text-2); white-space: nowrap; }
-.due.overdue { background: var(--danger-soft); color: #ff7b78; font-weight: 600; }
-.due.soon { background: var(--warn-soft); color: #ffbf55; font-weight: 600; }
-.due.done { opacity: .7; }
 .status-pill { appearance: none; border: 1px solid var(--border-2); background: var(--surface-2); color: var(--text); border-radius: 999px; padding: 3px 26px 3px 12px; font-size: 13px; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, var(--text-3) 50%), linear-gradient(135deg, var(--text-3) 50%, transparent 50%); background-position: calc(100% - 14px) 52%, calc(100% - 10px) 52%; background-size: 4px 4px; background-repeat: no-repeat; }
 .status-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-2); }
 .status-chip::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--sc, var(--text-3)); }
@@ -321,23 +317,52 @@ table.mat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .mat-table .okv { color: var(--accent-strong); }
 .mat-table .mini { width: 90px; }
 
-/* ===== Dashboard ===== */
+/* ===== Übersicht ===== */
 .dash-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.kpi-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px 13px; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.kpi-label { font-size: 12px; color: var(--text-3); }
+.kpi-value { font-size: 28px; font-weight: 650; line-height: 1.15; color: var(--text); }
+.kpi-sub { font-size: 12px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; align-items: start; }
+.dash-side { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.head-tools { display: flex; align-items: center; gap: 8px; }
+.table-scroll { overflow-x: auto; }
+.proj-table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 13.5px; }
+.proj-table th { text-align: left; font-weight: 500; font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; padding: 6px 8px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.proj-table td { padding: 12px 8px 6px; vertical-align: middle; }
+.proj-table .num { text-align: right; width: 64px; font-variant-numeric: tabular-nums; }
+.proj-table .bar-col { width: 136px; }
+.proj-table .status-chip { white-space: nowrap; }
+.proj-table tr.mat-line td { padding: 0 8px 14px; border-bottom: 1px solid var(--border); }
+.proj-table tbody tr:last-child td { border-bottom: 0; }
+.proj-table tr.proj-row:hover td, .proj-table tr.proj-row:hover + tr.mat-line td { background: rgba(255, 255, 255, .015); }
+.proj-link { display: inline-flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-weight: 600; min-width: 0; white-space: nowrap; }
+.proj-link:hover span { text-decoration: underline; }
+.meter { display: grid; grid-template-columns: minmax(0, 1fr) 40px; gap: 8px; align-items: center; }
+.meter .bar-text { font-size: 12px; min-width: 0; }
+.mat-chips { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 38px; }
+.mat-chips.empty-line { color: var(--text-3); font-size: 12px; }
+.mat-chip { position: relative; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; line-height: 1.3; padding: 3px 8px 5px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); overflow: hidden; }
+.mat-chip .nm { color: var(--text); }
+.mat-chip .qty { color: var(--text-3); font-variant-numeric: tabular-nums; }
+.mat-chip .chip-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: #0c0e11; }
+.mat-chip .chip-bar span { display: block; height: 100%; background: var(--accent); }
+.mat-chip.done { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+.mat-chip.done .ui-icon { color: var(--accent); }
+.mat-chip.more { text-decoration: none; color: var(--text-2); }
+.mat-chip.more:hover { color: var(--text); }
+.work-list { display: flex; flex-direction: column; }
+.work-row { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "prio t" "p p"; align-items: center; gap: 5px 8px; padding: 10px 6px; border-bottom: 1px solid var(--border); color: var(--text); text-decoration: none; border-radius: 4px; }
+.work-row:last-child { border-bottom: 0; }
+.work-row:hover { background: var(--surface-2); }
+.work-row .t { grid-area: t; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.work-row .p { grid-area: p; display: flex; align-items: center; gap: 6px; color: var(--text-3); font-size: 12px; }
+.mat-table.side td { padding: 8px 6px; }
+.mat-table.side .sub { font-size: 11.5px; color: var(--text-3); font-weight: 400; overflow-wrap: anywhere; }
+.mat-table.side .miss { color: #ffbf55; font-weight: 600; }
 .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 16px 14px; min-width: 0; }
 .panel.wide { grid-column: 1 / -1; }
-.due-list { display: flex; flex-direction: column; }
-.due-row { display: flex; flex-direction: column; gap: 6px; padding: 10px 8px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 4px; }
-.due-main { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.due-main .t { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.due-sub { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.due-row:last-child { border-bottom: 0; }
-.due-row:hover { background: var(--surface-2); }
-.due-row .p { display: flex; align-items: center; gap: 6px; color: var(--text-3); font-size: 12px; white-space: nowrap; }
-.proj-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-.proj-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--border); text-decoration: none; color: var(--text); }
-.proj-card:hover { border-color: var(--border-2); background: #252a33; }
-.proj-card .top { display: flex; align-items: center; gap: 10px; }
-.proj-card .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .empty { text-align: center; color: var(--text-3); padding: 18px; }
 .onboard { max-width: 720px; margin: 40px auto; text-align: center; }
 .onboard h1 { font-family: var(--font-px); font-weight: 400; font-size: 32px; margin: 18px 0 8px; }
@@ -410,8 +435,12 @@ dialog.narrow { width: min(460px, calc(100vw - 32px)); }
 .err { color: #ff7b78; font-size: 13px; }
 
 /* ===== Schmale Fenster ===== */
+@media (max-width: 1300px) {
+  .dash-layout { grid-template-columns: 1fr; }
+}
 @media (max-width: 1100px) {
   .dash-grid { grid-template-columns: 1fr; }
+  .kpi-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .details-body { grid-template-columns: 1fr; }
 }
 @media (max-width: 860px) {
@@ -425,6 +454,9 @@ dialog.narrow { width: min(460px, calc(100vw - 32px)); }
   .tips { grid-template-columns: 1fr; }
   .view-head h1 { font-size: 22px; }
   .grid2 { grid-template-columns: 1fr; }
+  .kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .kpi-value { font-size: 22px; }
+  .mat-chips { padding-left: 0; }
 }
 #scrim { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, .5); z-index: 40; }
 </style>
@@ -456,7 +488,6 @@ const STORAGE_KEY = 'blueprint:v1';
 const UI_KEY = 'blueprint:ui';
 const TRASH_DAYS = 7;
 const BACKUP_KEEP = 7;
-const SOON_DAYS = 3;
 const DAY_MS = 86400000;
 
 const PRIOS = [
@@ -627,7 +658,6 @@ const UI_PATHS = {
   archive: '<path d="M3 4h18v4H3zM5 8v12h14V8M10 12h4"/>',
   edit: '<path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"/>',
   copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
-  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   gear: '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
   help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7v.5M12 17.5v.01"/>',
   restore: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
@@ -694,30 +724,11 @@ function todayStr(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 function parseDay(ds) { const [y, m, d] = ds.split('-').map(Number); return new Date(y, m - 1, d); }
-function daysUntil(ds) {
-  const n = new Date(); n.setHours(0, 0, 0, 0);
-  return Math.round((parseDay(ds) - n) / DAY_MS);
-}
-function dueState(ds, done) {
-  if (!ds || done) return null;
-  const d = daysUntil(ds);
-  if (d < 0) return 'overdue';
-  if (d <= SOON_DAYS) return 'soon';
-  return 'later';
-}
 function fmtDate(ds) {
   const d = parseDay(ds);
   const opts = { weekday: 'short', day: '2-digit', month: '2-digit' };
   if (d.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric';
   return d.toLocaleDateString('de-DE', opts);
-}
-function relDay(ds) {
-  const d = daysUntil(ds);
-  if (d < -1) return `seit ${-d} Tagen überfällig`;
-  if (d === -1) return 'seit gestern überfällig';
-  if (d === 0) return 'heute';
-  if (d === 1) return 'morgen';
-  return `in ${d} Tagen`;
 }
 function daysAgo(iso) { return Math.floor((Date.now() - new Date(iso).getTime()) / DAY_MS); }
 
@@ -735,13 +746,13 @@ function newProject() {
   const now = nowIso();
   return {
     id: uid(), name: '', color: PROJECT_COLORS[0], icon: 'grass', descriptionMd: '', status: 'planung',
-    archived: false, deadline: null, location: null, materials: [], createdAt: now, updatedAt: now, deletedAt: null
+    archived: false, location: null, materials: [], createdAt: now, updatedAt: now, deletedAt: null
   };
 }
 function newTask(projectId, column = 'offen') {
   const now = nowIso();
   return {
-    id: uid(), projectId, title: '', descriptionMd: '', column, order: 0, priority: 2, deadline: null,
+    id: uid(), projectId, title: '', descriptionMd: '', column, order: 0, priority: 2,
     location: null, materials: [], checklist: [], tags: [], assignee: '', imageLinks: [], archived: false,
     completedAt: null, createdAt: now, updatedAt: now, deletedAt: null, deletedWithProject: false
   };
@@ -764,6 +775,8 @@ function normMaterials(list) {
     needed: Math.max(0, numOrNull(m.needed) || 0), have: Math.max(0, numOrNull(m.have) || 0)
   }));
 }
+// Ziel-Daten gibt es nicht mehr; alte Stände und Backups werden beim Laden bereinigt
+const withoutDeadline = o => { delete o.deadline; return o; };
 function normalize(raw) {
   const s = defaultState();
   if (!raw || typeof raw !== 'object') return s;
@@ -771,28 +784,28 @@ function normalize(raw) {
   if (!ACCENTS.some(a => a.v === s.settings.accent)) s.settings.accent = 'grass';
   s.projects = arr(raw.projects).filter(p => p && typeof p === 'object' && p.id).map(p => {
     const d = newProject();
-    return {
+    return withoutDeadline({
       ...d, ...p,
       name: str(p.name), descriptionMd: str(p.descriptionMd), icon: ICONS[p.icon] ? p.icon : 'grass',
       color: str(p.color) || d.color, status: STATUSES.some(x => x.v === p.status) ? p.status : 'planung',
-      archived: !!p.archived, deadline: str(p.deadline) || null, location: normLocation(p.location),
+      archived: !!p.archived, location: normLocation(p.location),
       materials: normMaterials(p.materials), deletedAt: p.deletedAt || null
-    };
+    });
   });
   s.tasks = arr(raw.tasks).filter(t => t && typeof t === 'object' && t.id).map(t => {
     const d = newTask(t.projectId);
-    return {
+    return withoutDeadline({
       ...d, ...t,
       title: str(t.title), descriptionMd: str(t.descriptionMd),
       column: COLUMNS.some(c => c.v === t.column) ? t.column : 'offen',
       order: Number.isFinite(Number(t.order)) ? Number(t.order) : 0,
       priority: [1, 2, 3, 4].includes(Number(t.priority)) ? Number(t.priority) : 2,
-      deadline: str(t.deadline) || null, location: normLocation(t.location), materials: normMaterials(t.materials),
+      location: normLocation(t.location), materials: normMaterials(t.materials),
       checklist: arr(t.checklist).filter(c => c && typeof c === 'object').map(c => ({ id: str(c.id) || uid(), text: str(c.text), done: !!c.done })),
       tags: arr(t.tags).map(str).filter(Boolean), assignee: str(t.assignee),
       imageLinks: arr(t.imageLinks).map(str).filter(Boolean), archived: !!t.archived,
       deletedAt: t.deletedAt || null, deletedWithProject: !!t.deletedWithProject
-    };
+    });
   });
   s.recipes = normRecipes(raw.recipes);
   s.schemaVersion = SCHEMA_VERSION;
@@ -1050,9 +1063,8 @@ function mdToHtml(src) {
 const ui = {
   route: { view: 'dashboard' },
   expandedTaskId: null,
-  filters: { prios: new Set(), dim: '', assignee: '', overdue: false },
+  filters: { prios: new Set(), dim: '', assignee: '' },
   banners: [],
-  dueBannerDismissed: false,
   pendingFocus: null,
   scrollToTask: null,
   mdMode: {},
@@ -1094,32 +1106,8 @@ function hideBanner(id) {
   ui.banners = ui.banners.filter(b => b.id !== id);
   if (had) render();
 }
-function dueCounts() {
-  let overdue = 0, soon = 0;
-  for (const p of activeProjects()) {
-    const ps = dueState(p.deadline, p.status === 'fertig');
-    if (ps === 'overdue') overdue++; else if (ps === 'soon') soon++;
-    for (const t of tasksOf(p.id)) {
-      if (t.archived) continue;
-      const st = dueState(t.deadline, t.column === 'fertig');
-      if (st === 'overdue') overdue++; else if (st === 'soon') soon++;
-    }
-  }
-  return { overdue, soon };
-}
 function renderBanners() {
   const list = [];
-  const dc = dueCounts();
-  if (!ui.dueBannerDismissed && (dc.overdue || dc.soon)) {
-    const parts = [];
-    if (dc.overdue) parts.push(`${dc.overdue} überfällig`);
-    if (dc.soon) parts.push(`${dc.soon} bald fällig`);
-    list.push(h('div', { class: 'banner ' + (dc.overdue ? 'danger' : 'warn') },
-      sym('alert', 18),
-      h('span', { class: 'text' }, h('strong', null, 'Deadlines: '), parts.join(' · ')),
-      ui.route.view !== 'dashboard' ? h('a', { class: 'btn small', href: '#/' }, 'Zum Dashboard') : null,
-      h('button', { class: 'icon-btn', title: 'Ausblenden', onClick: () => { ui.dueBannerDismissed = true; render(); } }, sym('x', 14))));
-  }
   for (const b of ui.banners) {
     list.push(h('div', { class: 'banner ' + (b.kind || 'info') },
       sym(b.icon || 'folder', 18),
@@ -1250,12 +1238,6 @@ function segmented(options, value, onChange, fkey) {
     h('button', { type: 'button', 'aria-pressed': String(o.v === value), 'data-fkey': `${fkey}-${o.v}`, onClick: () => onChange(o.v) }, o.label)));
 }
 function prioBadge(p) { return h('span', { class: `prio p${p}` }, label(PRIOS, p)); }
-function dueBadge(ds, done) {
-  if (!ds) return null;
-  const st = dueState(ds, done);
-  return h('span', { class: `due ${done ? 'done' : st}`, title: relDay(ds) },
-    sym('calendar', 12), fmtDate(ds), done ? null : h('span', null, '· ' + relDay(ds)));
-}
 function statusChip(s) { return h('span', { class: `status-chip st-${s}` }, label(STATUSES, s)); }
 function projBadge(p, size = 20, big = false) {
   return h('span', { class: 'proj-badge' + (big ? ' big' : ''), style: { '--pc': p.color } }, iconEl(p.icon, size));
@@ -1371,7 +1353,7 @@ function renderSidebar() {
   sb.replaceChildren(
     h('div', { class: 'brand' }, iconEl('grass', 30), h('div', null, h('div', { class: 'brand-name' }, 'Blueprint'), h('div', { class: 'brand-sub' }, 'Bauprojekte planen'))),
     h('div', { class: 'side-scroll', 'data-skey': 'side' },
-      h('a', { class: 'nav-item' + (r.view === 'dashboard' ? ' active' : ''), href: '#/' }, sym('grid'), 'Dashboard'),
+      h('a', { class: 'nav-item' + (r.view === 'dashboard' ? ' active' : ''), href: '#/' }, sym('grid'), 'Übersicht'),
       h('a', { class: 'nav-item' + (r.view === 'recipes' ? ' active' : ''), href: '#/rezepte' }, iconEl('crafting', 16), 'Rezepte',
         liveRecipes().length ? h('span', { class: 'count' }, liveRecipes().length) : null),
       h('div', { class: 'side-head' }, h('span', null, 'Projekte'),
@@ -1436,87 +1418,137 @@ function renderDashboard(root, menuBtn, banners) {
   }
   const today = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   root.append(
-    h('header', { class: 'view-head' }, menuBtn, h('div', { class: 'head-text' }, h('h1', null, 'Dashboard'), h('div', { class: 'muted' }, today)),
+    h('header', { class: 'view-head' }, menuBtn, h('div', { class: 'head-text' }, h('h1', null, 'Übersicht'), h('div', { class: 'muted' }, today)),
       h('div', { class: 'head-actions' }, h('button', { class: 'btn primary', onClick: () => openProjectModal(null) }, sym('plus'), 'Neues Projekt'))),
     banners);
 
-  // Bald fällig & überfällig
-  const due = [];
-  for (const p of projects) {
-    const ps = dueState(p.deadline, p.status === 'fertig');
-    if (ps === 'overdue' || ps === 'soon') due.push({ ds: p.deadline, title: p.name || '(ohne Namen)', p, kind: 'Projekt-Deadline' });
-    for (const t of tasksOf(p.id)) {
-      if (t.archived) continue;
-      const st = dueState(t.deadline, t.column === 'fertig');
-      if (st === 'overdue' || st === 'soon') due.push({ ds: t.deadline, title: t.title || '(ohne Titel)', p, t });
-    }
+  const baseView = ui.prefs.matView === 'base';
+  const index = recipeIndex();
+  const matByProject = new Map(projects.map(p => [p.id, projectMaterials(p)]));
+
+  // Kennzahlen
+  const allTasks = projects.flatMap(p => tasksOf(p.id));
+  const inCol = c => allTasks.filter(t => !t.archived && t.column === c).length;
+  const doneCount = allTasks.filter(isDone).length;
+  let need = 0, have = 0, missingPieces = 0;
+  for (const rows of matByProject.values()) {
+    const tot = rowsTotals(rows);
+    need += tot.need; have += tot.have;
+    missingPieces += baseView ? baseRows(rows, index).rows.reduce((sum, b) => sum + b.missing, 0) : tot.need - tot.have;
   }
-  due.sort((a, b) => a.ds.localeCompare(b.ds));
-  const duePanel = h('section', { class: 'panel' },
-    h('h2', { class: 'section' }, sym('calendar', 16), 'Bald fällig & überfällig'),
-    due.length ? h('div', { class: 'due-list' }, due.map(d => h('div', { class: 'due-row', tabindex: 0, role: 'button',
-      onClick: () => openTaskFromDashboard(d), onKeydown: e => { if (e.key === 'Enter') openTaskFromDashboard(d); } },
-      h('div', { class: 'due-main' }, d.t ? prioBadge(d.t.priority) : h('span', { class: 'tag small' }, d.kind), h('span', { class: 't' }, d.title)),
-      h('div', { class: 'due-sub' }, dueBadge(d.ds, false), h('span', { class: 'p' }, projBadge(d.p, 14), d.p.name)))))
-      : h('div', { class: 'empty' }, `Nichts fällig in den nächsten ${SOON_DAYS} Tagen.`));
+  root.append(h('div', { class: 'kpi-row' },
+    kpiTile('Aktive Projekte', fmtNum(projects.length), `${fmtNum(projects.filter(p => p.status === 'bau').length)} im Bau`),
+    kpiTile('Offen', fmtNum(inCol('offen')), 'Aufgaben'),
+    kpiTile('In Arbeit', fmtNum(inCol('arbeit')), 'Aufgaben'),
+    kpiTile('Erledigt', allTasks.length ? pctText(doneCount / allTasks.length) : '–', `${fmtNum(doneCount)} von ${fmtNum(allTasks.length)} Aufgaben`),
+    kpiTile('Material gesammelt', need ? pctText(have / need) : '–',
+      need ? `${fmtNum(missingPieces)} ${baseView ? 'Stück Grundmaterial' : 'Stück'} fehlen` : 'Noch kein Material eingetragen')));
+
+  // Projekttabelle mit Materialien
+  const mainPanel = h('section', { class: 'panel' },
+    h('div', { class: 'panel-head' }, h('h2', { class: 'section' }, sym('grid', 16), 'Projekte'),
+      h('div', { class: 'head-tools' }, h('span', { class: 'muted small' }, 'Material:'), matViewToggle('dash'))),
+    projects.length ? projectsTable(projects, matByProject, baseView, index) : h('div', { class: 'empty' }, 'Alle Projekte sind archiviert.'));
 
   // Fehlendes Material über alle aktiven Projekte
-  const all = new Map();
-  for (const p of projects) {
-    for (const r of projectMaterials(p)) {
-      const key = r.name.toLowerCase();
-      let a = all.get(key);
-      if (!a) all.set(key, a = { name: r.name, needed: 0, have: 0, projects: [] });
-      a.needed += r.needed; a.have += r.have;
-      if (r.needed > r.have) a.projects.push(p);
-    }
-  }
-  const missing = [...all.values()].filter(m => m.needed > m.have).sort((a, b) => (b.needed - b.have) - (a.needed - a.have));
-  const baseView = ui.prefs.matView === 'base';
-  let baseMissing = [];
+  let missing;
   if (baseView) {
-    const index = recipeIndex(), merged = new Map();
+    const merged = new Map();
     for (const p of projects) {
-      for (const b of baseRows(projectMaterials(p), index).rows) {
+      for (const b of baseRows(matByProject.get(p.id), index).rows) {
         if (!b.missing) continue;
-        if (!merged.has(b.key)) merged.set(b.key, { name: b.name, missing: 0, total: 0, projects: [] });
+        if (!merged.has(b.key)) merged.set(b.key, { name: b.name, miss: 0, need: 0, projects: [] });
         const m = merged.get(b.key);
-        m.missing += b.missing; m.total += b.total; m.projects.push(p);
+        m.miss += b.missing; m.need += b.total; m.projects.push(p);
       }
     }
-    baseMissing = [...merged.values()].sort((a, b) => b.missing - a.missing || a.name.localeCompare(b.name, 'de'));
+    missing = [...merged.values()];
+  } else {
+    const all = new Map();
+    for (const p of projects) {
+      for (const r of matByProject.get(p.id)) {
+        const key = r.name.toLowerCase();
+        if (!all.has(key)) all.set(key, { name: r.name, need: 0, have: 0, projects: [] });
+        const a = all.get(key);
+        a.need += r.needed; a.have += r.have;
+        if (r.needed > r.have) a.projects.push(p);
+      }
+    }
+    missing = [...all.values()].filter(m => m.need > m.have).map(m => ({ ...m, miss: m.need - m.have }));
   }
-  const projChips = list => h('div', { class: 'tags' }, list.map(p => h('a', { class: 'tag small', href: `#/p/${encodeURIComponent(p.id)}`, style: { 'text-decoration': 'none' } }, p.name)));
+  missing.sort((a, b) => b.miss - a.miss || a.name.localeCompare(b.name, 'de'));
   const matPanel = h('section', { class: 'panel' },
-    h('div', { class: 'panel-head' }, h('h2', { class: 'section' }, sym('box', 16), 'Fehlendes Material'), matViewToggle('dash')),
-    baseView ? (baseMissing.length ? h('table', { class: 'mat-table' },
-      h('thead', null, h('tr', null, h('th', null, 'Grundmaterial'), h('th', { class: 'num' }, 'Fehlt noch'), h('th', { class: 'num' }, 'Gesamt'), h('th', null, 'Projekte'))),
-      h('tbody', null, baseMissing.map(m => h('tr', null,
-        h('td', null, m.name), h('td', { class: 'num miss' }, fmtNum(m.missing)), h('td', { class: 'num muted' }, fmtNum(m.total)), h('td', null, projChips(m.projects))))))
-      : h('div', { class: 'empty' }, 'Alles gesammelt – oder noch kein Material eingetragen.'))
-    : missing.length ? h('table', { class: 'mat-table' },
-      h('thead', null, h('tr', null, h('th', null, 'Material'), h('th', { class: 'num' }, 'Fehlt'), h('th', { class: 'num' }, 'Gesammelt'), h('th', null, 'Projekte'))),
+    h('h2', { class: 'section' }, sym('box', 16), baseView ? 'Fehlendes Grundmaterial' : 'Fehlendes Material'),
+    missing.length ? h('table', { class: 'mat-table side' },
+      h('thead', null, h('tr', null, h('th', null, baseView ? 'Grundmaterial' : 'Material'), h('th', { class: 'num' }, 'Fehlt'))),
       h('tbody', null, missing.map(m => h('tr', null,
-        h('td', null, m.name),
-        h('td', { class: 'num miss' }, fmtNum(m.needed - m.have)),
-        h('td', { class: 'num muted' }, `${fmtNum(m.have)} / ${fmtNum(m.needed)}`),
-        h('td', null, h('div', { class: 'tags' }, m.projects.map(p => h('a', { class: 'tag small', href: `#/p/${encodeURIComponent(p.id)}`, style: { 'text-decoration': 'none' } }, p.name)))))))
-    ) : h('div', { class: 'empty' }, 'Alles gesammelt – oder noch kein Material eingetragen.'));
+        h('td', null, h('div', null, m.name), h('div', { class: 'sub' }, m.projects.map(p => p.name).join(', '))),
+        h('td', { class: 'num' }, h('div', { class: 'miss' }, fmtNum(m.miss)),
+          h('div', { class: 'sub' }, baseView ? `von ${fmtNum(m.need)}` : `${fmtNum(m.have)} / ${fmtNum(m.need)}`))))))
+      : h('div', { class: 'empty' }, 'Alles gesammelt – oder noch kein Material eingetragen.'));
 
-  // Projekt-Fortschritt
-  const progPanel = h('section', { class: 'panel wide' },
-    h('h2', { class: 'section' }, sym('grid', 16), 'Projekt-Fortschritt'),
-    projects.length ? h('div', { class: 'proj-cards' }, projects.map(p => h('a', { class: 'proj-card', href: `#/p/${encodeURIComponent(p.id)}` },
-      h('div', { class: 'top' }, projBadge(p, 22), h('div', { style: { 'min-width': '0', flex: '1' } }, h('div', { class: 'nm' }, p.name || '(ohne Namen)'), statusChip(p.status)),
-        dueBadge(p.deadline, p.status === 'fertig')),
-      bar('proj-tasks', p.id), bar('proj-mat', p.id))))
-      : h('div', { class: 'empty' }, 'Alle Projekte sind archiviert.'));
-
-  root.append(h('div', { class: 'dash-grid' }, duePanel, matPanel, progPanel));
+  root.append(h('div', { class: 'dash-layout' }, mainPanel, h('div', { class: 'dash-side' }, inProgressPanel(projects), matPanel)));
 }
-function openTaskFromDashboard(d) {
-  if (d.t) { ui.expandedTaskId = null; ui.scrollToTask = d.t.id; }
-  go(`#/p/${encodeURIComponent(d.p.id)}`);
+function kpiTile(labelText, value, sub) {
+  return h('div', { class: 'kpi' }, h('div', { class: 'kpi-label' }, labelText), h('div', { class: 'kpi-value' }, value), h('div', { class: 'kpi-sub' }, sub));
+}
+function meter(pct, title) {
+  return h('div', { class: 'meter', title },
+    h('div', { class: 'bar-track' }, h('div', { class: 'bar-fill', style: { width: `${Math.round(Math.min(1, pct || 0) * 100)}%` } })),
+    h('span', { class: 'bar-text' }, pct == null ? '–' : pctText(pct)));
+}
+function projectsTable(projects, matByProject, baseView, index) {
+  const body = [];
+  for (const p of projects) {
+    const ts = tasksOf(p.id);
+    const inCol = c => ts.filter(t => !t.archived && t.column === c).length;
+    const done = ts.filter(isDone).length;
+    const rows = matByProject.get(p.id);
+    const tot = rowsTotals(rows);
+    const href = `#/p/${encodeURIComponent(p.id)}`;
+    body.push(h('tr', { class: 'proj-row', dataset: { pid: p.id } },
+      h('td', null, h('a', { class: 'proj-link', href }, projBadge(p, 18), h('span', null, p.name || '(ohne Namen)'))),
+      h('td', null, statusChip(p.status)),
+      h('td', { class: 'num' }, fmtNum(inCol('offen'))),
+      h('td', { class: 'num' }, fmtNum(inCol('arbeit'))),
+      h('td', { class: 'num' }, fmtNum(done)),
+      h('td', { class: 'bar-col' }, meter(ts.length ? done / ts.length : null, ts.length ? `${done} von ${ts.length} Aufgaben erledigt` : 'Noch keine Aufgaben')),
+      h('td', { class: 'bar-col' }, meter(tot.need ? tot.have / tot.need : null, tot.need ? `${fmtNum(tot.have)} von ${fmtNum(tot.need)} gesammelt` : 'Kein Material eingetragen'))));
+    body.push(h('tr', { class: 'mat-line', dataset: { pid: p.id } }, h('td', { colspan: '7' }, materialChips(rows, baseView, index, href))));
+  }
+  return h('div', { class: 'table-scroll' }, h('table', { class: 'proj-table' },
+    h('thead', null, h('tr', null, h('th', null, 'Projekt'), h('th', null, 'Status'), h('th', { class: 'num' }, 'Offen'), h('th', { class: 'num' }, 'In Arbeit'),
+      h('th', { class: 'num' }, 'Fertig'), h('th', { class: 'bar-col' }, 'Aufgaben'), h('th', { class: 'bar-col' }, 'Material'))),
+    h('tbody', null, body)));
+}
+const MAX_CHIPS = 12;
+function materialChips(rows, baseView, index, href) {
+  if (!rows.length) return h('div', { class: 'mat-chips empty-line' }, 'Kein Material eingetragen');
+  const items = baseView
+    ? baseRows(rows, index).rows.map(b => ({ name: b.name, have: b.total - b.missing, need: b.total }))
+    : rows.map(r => ({ name: r.name, have: r.have, need: r.needed }));
+  for (const m of items) m.done = m.need > 0 && m.have >= m.need;
+  items.sort((a, b) => (a.done - b.done) || ((b.need - b.have) - (a.need - a.have)) || a.name.localeCompare(b.name, 'de'));
+  return h('div', { class: 'mat-chips' },
+    items.slice(0, MAX_CHIPS).map(m => h('span', { class: 'mat-chip' + (m.done ? ' done' : ''),
+      title: m.done ? `${m.name}: vollständig` : `${m.name}: ${fmtNum(Math.max(0, m.need - m.have))} fehlen` },
+      m.done ? sym('check', 11) : null, h('span', { class: 'nm' }, m.name), h('span', { class: 'qty' }, `${fmtNum(m.have)} / ${fmtNum(m.need)}`),
+      h('span', { class: 'chip-bar' }, h('span', { style: { width: `${Math.round(m.need ? Math.min(1, m.have / m.need) * 100 : 0)}%` } })))),
+    items.length > MAX_CHIPS ? h('a', { class: 'mat-chip more', href }, `+${items.length - MAX_CHIPS} weitere`) : null);
+}
+const MAX_WORK = 12;
+function inProgressPanel(projects) {
+  const items = [];
+  for (const p of projects) for (const t of columnTasks(p.id, 'arbeit')) items.push({ p, t });
+  items.sort((a, b) => b.t.priority - a.t.priority || a.p.name.localeCompare(b.p.name, 'de'));
+  return h('section', { class: 'panel' },
+    h('h2', { class: 'section' }, iconEl('pickaxe', 16), 'In Arbeit'),
+    items.length ? h('div', { class: 'work-list' }, items.slice(0, MAX_WORK).map(({ p, t }) =>
+      h('a', { class: 'work-row', href: `#/p/${encodeURIComponent(p.id)}`, onClick: () => { ui.scrollToTask = t.id; } },
+        prioBadge(t.priority), h('span', { class: 't' }, t.title || '(ohne Titel)'),
+        h('span', { class: 'p' }, projBadge(p, 14), p.name))),
+      items.length > MAX_WORK ? h('div', { class: 'small muted', style: { padding: '8px 6px 0' } }, `+${items.length - MAX_WORK} weitere`) : null)
+      : h('div', { class: 'empty' }, 'Gerade ist nichts in Arbeit.'));
 }
 function renderOnboarding() {
   const tip = (n, text) => h('div', { class: 'tip' }, h('div', { class: 'n' }, n), h('p', null, text));
@@ -1525,7 +1557,7 @@ function renderOnboarding() {
     h('h1', null, 'Willkommen bei Blueprint'),
     h('p', { class: 'lead' }, 'Dein Planer für Bauprojekte auf dem Minecraft-Server – komplett offline, nur auf diesem PC.'),
     h('div', { class: 'tips' },
-      tip('1', 'Lege mit „Neues Projekt“ dein erstes Bauprojekt an, z. B. „Spawn-Stadt“ – mit Icon, Farbe, Koordinaten und Deadline.'),
+      tip('1', 'Lege mit „Neues Projekt“ dein erstes Bauprojekt an, z. B. „Spawn-Stadt“ – mit Icon, Farbe, Status und Koordinaten.'),
       tip('2', 'Füge im Board Aufgaben hinzu und ziehe die Karten per Drag & Drop von „Offen“ über „In Arbeit“ nach „Fertig“.'),
       tip('3', 'Richte unter „Einstellungen“ einen Backup-Ordner ein – dann sichert Blueprint jeden Tag automatisch.')),
     h('button', { class: 'btn primary', 'data-fkey': 'onboard-new', onClick: () => openProjectModal(null) }, sym('plus'), 'Erstes Projekt anlegen'),
@@ -1540,7 +1572,6 @@ function renderProjectView(root, p, menuBtn, banners) {
       h('h1', null, p.name || '(ohne Namen)'),
       h('div', { class: 'head-meta' },
         selectEl(STATUSES, p.status, v => setProjectStatus(p, v), `p-${p.id}-status`, 'status-pill'),
-        dueBadge(p.deadline, p.status === 'fertig'),
         locView(p.location))),
     h('div', { class: 'head-actions' },
       h('button', { class: 'btn', onClick: () => openProjectModal(p) }, sym('edit', 15), 'Bearbeiten'),
@@ -1575,7 +1606,7 @@ function renderProjectView(root, p, menuBtn, banners) {
   const f = ui.filters;
   const names = [...new Set(tasksOf(p.id).map(t => t.assignee.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de'));
   if (f.assignee && !names.some(n => n.toLowerCase() === f.assignee.toLowerCase())) names.push(f.assignee);
-  const active = f.prios.size || f.dim || f.assignee || f.overdue;
+  const active = f.prios.size || f.dim || f.assignee;
   root.append(h('div', { class: 'toolbar' },
     h('div', { class: 'group' }, h('span', { class: 'muted small' }, sym('filter', 14)),
       PRIOS.map(pr => h('button', { class: 'chip', 'aria-pressed': String(f.prios.has(pr.v)), 'data-fkey': `f-prio-${pr.v}`,
@@ -1583,8 +1614,7 @@ function renderProjectView(root, p, menuBtn, banners) {
     h('span', { class: 'sep' }),
     selectEl([{ v: '', label: 'Alle Dimensionen' }, ...DIMS], f.dim, v => { f.dim = v; render(); }, 'f-dim'),
     selectEl([{ v: '', label: 'Alle Zuständigen' }, ...names.map(n => ({ v: n, label: n }))], f.assignee, v => { f.assignee = v; render(); }, 'f-assignee'),
-    h('button', { class: 'chip', 'aria-pressed': String(f.overdue), 'data-fkey': 'f-overdue', onClick: () => { f.overdue = !f.overdue; render(); } }, sym('alert', 13), 'Nur überfällig'),
-    active ? h('button', { class: 'btn ghost small', onClick: () => { f.prios.clear(); f.dim = ''; f.assignee = ''; f.overdue = false; render(); } }, 'Filter zurücksetzen') : null,
+    active ? h('button', { class: 'btn ghost small', onClick: () => { f.prios.clear(); f.dim = ''; f.assignee = ''; render(); } }, 'Filter zurücksetzen') : null,
     h('span', { class: 'spacer' }),
     p.archived ? null : h('button', { class: 'btn primary', onClick: () => openTaskModal(p) }, sym('plus'), 'Neue Aufgabe…')));
 
@@ -1662,13 +1692,12 @@ function passesFilter(t) {
   if (f.prios.size && !f.prios.has(t.priority)) return false;
   if (f.dim && (!locValid(t.location) || t.location.dim !== f.dim)) return false;
   if (f.assignee && t.assignee.trim().toLowerCase() !== f.assignee.toLowerCase()) return false;
-  if (f.overdue && dueState(t.deadline, t.column === 'fertig') !== 'overdue') return false;
   return true;
 }
 
 /* ----- Kanban-Board ----- */
 function renderBoard(p) {
-  const filterOn = ui.filters.prios.size || ui.filters.dim || ui.filters.assignee || ui.filters.overdue;
+  const filterOn = ui.filters.prios.size || ui.filters.dim || ui.filters.assignee;
   const board = h('div', { class: 'board', 'data-skey': `board-${p.id}` });
   for (const col of COLUMNS) {
     const all = columnTasks(p.id, col.v);
@@ -1743,7 +1772,7 @@ function wireDrop(body, p, col) {
 function taskCard(t, p) {
   if (ui.expandedTaskId === t.id) return taskCardExpanded(t, p);
   const done = t.column === 'fertig';
-  const meta = [dueBadge(t.deadline, done), locView(t.location)].filter(Boolean);
+  const meta = [locView(t.location)].filter(Boolean);
   const bars = [t.materials.length ? bar('task-mat', t.id) : null, t.checklist.length ? bar('task-check', t.id) : null].filter(Boolean);
   const extra = [];
   if (t.descriptionMd.trim()) extra.push(h('span', { title: 'Hat eine Beschreibung' }, sym('text', 12)));
@@ -1810,10 +1839,8 @@ function taskEditorFields(t, ctx) {
       onInput: e => { t.title = e.target.value; ctx.changed(); } })),
     h('div', { class: 'grid2' },
       field('Priorität', selectEl(PRIOS, t.priority, v => { t.priority = Number(v); ctx.changed(); ctx.rerender(); }, `${k}-prio`)),
-      field('Deadline', h('input', { class: 'input', type: 'date', value: t.deadline || '', 'data-fkey': `${k}-deadline`,
-        onChange: e => { t.deadline = e.target.value || null; ctx.changed(); } }), 'calendar')),
-    field('Zuständig', h('input', { class: 'input', value: t.assignee, placeholder: 'Spielername', list: 'dl-assignee', 'data-fkey': `${k}-assignee`, autocomplete: 'off',
-      onInput: e => { t.assignee = e.target.value; ctx.changed(); } }), 'user'),
+      field('Zuständig', h('input', { class: 'input', value: t.assignee, placeholder: 'Spielername', list: 'dl-assignee', 'data-fkey': `${k}-assignee`, autocomplete: 'off',
+        onInput: e => { t.assignee = e.target.value; ctx.changed(); } }), 'user')),
     field('Koordinaten', locationEditor(t, ctx)),
     field('Beschreibung', markdownEditor(t, ctx)),
     field('Checkliste', checklistEditor(t, ctx)),
@@ -2183,7 +2210,7 @@ function openProjectModal(p) {
       ui.pendingFocus = 'quick-offen';
       go(`#/p/${encodeURIComponent(draft.id)}`);
     } else {
-      Object.assign(p, { name: draft.name, icon: draft.icon, color: draft.color, status: draft.status, deadline: draft.deadline, location: draft.location, descriptionMd: draft.descriptionMd });
+      Object.assign(p, { name: draft.name, icon: draft.icon, color: draft.color, status: draft.status, location: draft.location, descriptionMd: draft.descriptionMd });
       touch(p);
       modal.close();
       commit();
@@ -2201,10 +2228,7 @@ function openProjectModal(p) {
     field('Farbe', h('div', { class: 'swatches' }, PROJECT_COLORS.map(c =>
       h('button', { type: 'button', class: 'swatch', title: c, 'aria-label': 'Farbe ' + c, 'aria-pressed': String(draft.color === c), 'data-fkey': `m-color-${c}`,
         style: { background: c }, onClick: () => { draft.color = c; modal.rerender(); } })))),
-    h('div', { class: 'grid2' },
-      field('Status', selectEl(STATUSES, draft.status, v => { draft.status = v; }, 'm-proj-status')),
-      field('Deadline', h('input', { class: 'input', type: 'date', value: draft.deadline || '', 'data-fkey': 'm-proj-deadline',
-        onChange: e => { draft.deadline = e.target.value || null; } }), 'calendar')),
+    field('Status', selectEl(STATUSES, draft.status, v => { draft.status = v; }, 'm-proj-status')),
     field('Koordinaten', locationEditor(draft, ctx)),
     field('Beschreibung', markdownEditor(draft, ctx))
   ], [
@@ -2251,25 +2275,26 @@ async function openSettings() {
 function openHelp() {
   const sec = (title, items) => [h('h3', null, title), h('ul', null, items.map(i => h('li', null, i)))];
   modal.open(() => dlgShell('Hilfe', h('div', { class: 'help' },
-    sec('Projekte', ['Links auf „+“ klicken, um ein Bauprojekt anzulegen: Name, Icon, Farbe, Status, Deadline, Koordinaten, Beschreibung.',
+    sec('Übersicht', ['Oben stehen die Kennzahlen, darunter alle aktiven Projekte mit Aufgaben-Stand und ihren Materialien (gesammelt / benötigt).',
+      'Rechts: was gerade „In Arbeit“ ist (Klick springt zur Karte) und welches Material insgesamt noch fehlt.',
+      'Der Umschalter „Material: Wie eingetragen / Grundmaterialien“ gilt für die Projekttabelle und „Fehlendes Material“.']),
+    sec('Projekte', ['Links auf „+“ klicken, um ein Bauprojekt anzulegen: Name, Icon, Farbe, Status, Koordinaten, Beschreibung.',
       'Projekte stehen in der Seitenleiste sortiert nach Status: Im Bau → Planung → Pausiert → Fertig.',
       'Fertige Projekte über „Archivieren“ ins Archiv verschieben, damit die Liste übersichtlich bleibt.']),
     sec('Aufgaben & Board', ['„+ Aufgabe hinzufügen“ unten in einer Spalte: Titel tippen, Enter. Für alle Felder auf einmal: „Neue Aufgabe…“.',
       'Karten per Drag & Drop zwischen Offen, In Arbeit und Fertig verschieben oder innerhalb der Spalte sortieren.',
       'Klick auf eine Karte klappt sie auf: Dort bearbeitest du alles direkt. Änderungen werden sofort gespeichert.',
-      'Filter oben: Priorität, Dimension, Zuständig, nur überfällige.']),
+      'Filter oben: Priorität, Dimension, Zuständig.']),
     sec('Koordinaten', ['Punkt (X/Y/Z) oder Bereich (Ecke A und B) mit Overworld, Nether oder End.',
       'Klick auf die Koordinaten kopiert sie als Zahlen, z. B. „120 64 -340“.',
       'Overworld ↔ Nether wird automatisch umgerechnet (÷ 8 bzw. × 8).']),
     sec('Material', ['Materiallisten gibt es pro Aufgabe und pro Projekt (in den Projektdetails).',
       'Die Projekt-Summe fasst gleiche Namen zusammen, egal ob groß oder klein geschrieben.',
-      'Das Dashboard zeigt, was über alle Projekte hinweg noch fehlt.']),
-    sec('Deadlines', [`Rot = überfällig, Orange = in den nächsten ${SOON_DAYS} Tagen fällig.`,
-      'Beim Öffnen erscheint ein Hinweis, wenn etwas fällig ist. Die Liste steht auf dem Dashboard.']),
+      'Die Übersicht zeigt bei jedem Projekt die Materialien und was über alle Projekte hinweg noch fehlt.']),
     sec('Papierkorb & Archiv', [`Gelöschtes landet im Papierkorb und wird nach ${TRASH_DAYS} Tagen endgültig entfernt.`,
       'Erledigte Aufgaben bleiben in „Fertig“, bis du sie archivierst.']),
     sec('Rezepte & Grundmaterialien', ['Unter „Rezepte“ trägst du ein, woraus etwas hergestellt wird, z. B. „4× Steinziegel ← 4× Stein (Werkbank)“.',
-      'Blueprint rechnet Materiallisten dann über alle Stufen in Grundmaterialien um – in der Aufgabe, im Projekt-Gesamtbedarf und im Dashboard (Umschalter „Grundmaterialien“).',
+      'Blueprint rechnet Materiallisten dann über alle Stufen in Grundmaterialien um – in der Aufgabe, im Projekt-Gesamtbedarf und in der Übersicht (Umschalter „Grundmaterialien“).',
       'Gerechnet wird in ganzen Herstellungen; gleiche Zwischenprodukte werden vorher zusammengezählt. „Fehlt noch“ nutzt „Benötigt − Gesammelt“.',
       'Der Rechner im Rezeptbuch rechnet jede Menge aus, ohne dass du eine Aufgabe anlegen musst.']),
     sec('Daten übertragen (z. B. Handy → Laptop)', ['Auf dem alten Gerät: „Daten übertragen“ → „Teilen…“ oder „Kopieren“ und den Code an dich selbst schicken (E-Mail, WhatsApp, AirDrop, Notiz).',
@@ -2739,7 +2764,6 @@ function init() {
   setInterval(() => {
     if (todayStr() === lastDay) return;
     lastDay = todayStr();
-    ui.dueBannerDismissed = false;
     if (purgeTrash()) store.save();
     render();
     dailyBackupCheck();
